@@ -24,10 +24,9 @@ add_executable(ai ${SOURCES})
 
 # Find and link libraries
 find_package(CURL REQUIRED)
-find_package(nlohmann_json REQUIRED)
 
 # Link the required libraries
-target_link_libraries(ai PRIVATE md4c md4c-html CURL::libcurl nlohmann_json::nlohmann_json)
+target_link_libraries(ai PRIVATE CURL::libcurl)
 
 # Manually find and link JsonCpp library
 find_library(JSONCPP_LIB jsoncpp REQUIRED)
