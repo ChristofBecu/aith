@@ -1,0 +1,44 @@
+# Build directories
+/build/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+*.swp
+*.swo
+
+# Object files
+*.o
+*.obj
+*.lo
+*.a
+*.so
+*.so.*
+
+# Executables
+/ai
+
+# Generated files
+*.d
+*.dSYM/
+*.exe
+*.out
+*.app
+*.stackdump
+
+# Markdown temporary files
+/tmp/markdown.md
+
+# IDE-specific files
+.vscode/
+.idea/
+*.iml
+
+# System files
+.DS_Store
+Thumbs.db
