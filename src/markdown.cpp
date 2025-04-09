@@ -3,6 +3,11 @@
 #include <fstream>
 #include <cstdio>
 
+// Documentation added for functions and classes in this file.
+/**
+ * Renders a Markdown string to the terminal using mdcat.
+ * @param markdown The Markdown string to render.
+ */
 void renderMarkdown(const std::string &markdown) {
     std::string tempFile = "/tmp/markdown.md";
     std::ofstream outFile(tempFile);

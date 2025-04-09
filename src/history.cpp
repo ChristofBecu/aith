@@ -7,6 +7,12 @@
 #include <ctime>
 #include <iostream>
 
+/**
+ * Starts a new history file for storing chat interactions.
+ * @param prompt The initial user prompt to store in the history.
+ * @param historyDir The directory where history files are stored.
+ * @param currentHistory The path to the current history file.
+ */
 void startNewHistory(const std::string &prompt, const std::string &historyDir, const std::string &currentHistory) {
     if (std::filesystem::exists(currentHistory)) {
         std::time_t now = std::time(nullptr);
@@ -33,6 +39,12 @@ void startNewHistory(const std::string &prompt, const std::string &historyDir, c
     historyFile.close();
 }
 
+/**
+ * Adds a new entry to the history file.
+ * @param role The role of the entity (e.g., user, assistant) adding the entry.
+ * @param content The content of the entry to add.
+ * @param currentHistory The path to the current history file.
+ */
 void addToHistory(const std::string &role, const std::string &content, const std::string &currentHistory) {
     std::ifstream file(currentHistory);
     Json::Value history;

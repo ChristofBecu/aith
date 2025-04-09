@@ -6,6 +6,11 @@
 #include <functional>
 #include <iostream>
 
+/**
+ * Retrieves the value of an environment variable.
+ * @param key The name of the environment variable.
+ * @return The value of the environment variable, or an empty string if not found.
+ */
 std::string getEnvVar(const std::string &key) {
     const char *val = std::getenv(key.c_str());
     if (val == nullptr) {
@@ -14,6 +19,11 @@ std::string getEnvVar(const std::string &key) {
     return std::string(val);
 }
 
+/**
+ * Executes a shell command and returns the output.
+ * @param cmd The command to execute.
+ * @return The output of the command as a string.
+ */
 std::string exec(const char* cmd) {
     std::array<char, 128> buffer;
     std::string result;
@@ -27,6 +37,11 @@ std::string exec(const char* cmd) {
     return result;
 }
 
+/**
+ * Executes a shell command and checks its return code.
+ * @param command The command to execute.
+ * If the command fails, the program will terminate with an error message.
+ */
 void executeCommand(const std::string &command) {
     int ret_code = std::system(command.c_str());
     if (ret_code != 0) {

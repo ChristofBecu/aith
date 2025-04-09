@@ -12,6 +12,10 @@
 const std::string GROQ_API_URL = "https://api.groq.com/openai/v1";
 const std::string DEFAULT_MODEL = "llama-3.3-70b-specdec";
 
+/**
+ * Lists all available AI models.
+ * @param apiKey The API key for authentication.
+ */
 void listModels(const std::string &apiKey) {
     std::string command = "curl -s -X GET " + GROQ_API_URL + "/models -H 'Authorization: Bearer " + apiKey + "'";
     std::string result = exec(command.c_str());
@@ -32,6 +36,14 @@ void listModels(const std::string &apiKey) {
     }
 }
 
+/**
+ * Sends a chat request to the AI model.
+ * @param prompt The input string to send to the model.
+ * @param model The model to use for the chat.
+ * @param apiKey The API key for authentication.
+ * @param currentHistory The path to the history file.
+ * @param newChat Whether this is a new chat session.
+ */
 void chat(const std::string &prompt, const std::string &model, const std::string &apiKey, const std::string &currentHistory, bool newChat) {
     std::string selectedModel = model.empty() ? DEFAULT_MODEL : model;
 
