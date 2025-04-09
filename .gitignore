@@ -42,3 +42,26 @@ Makefile
 # System files
 .DS_Store
 Thumbs.db
+
+# Additional directories and files to ignore
+/docs/html/
+/docs/search/
+*.ninja
+*.marks
+*.yaml
+*.json
+*.bin
+*.svg
+*.png
+*.js
+*.css
+*.txt
+*.cmi
+*.cmake
+*.ts
+*.make
+*.dox
+*.h.gch
+*.h.pch
+*.h.gch.d
+*.h.pch.d
