@@ -1,6 +1,5 @@
 # AI Chat Application
-
-Welcome to the AI Chat Application! This project is a C++ application designed to interact with AI models, manage chat histories, and render responses in Markdown format. It provides a simple interface for users to communicate with AI models and store their interactions for future reference.
+This project is a lightweight C++ application for interacting with AI models in the terminal. It allows users to chat with AI, save conversation histories, and view responses in Markdown format for better clarity.
 
 ## Features
 - **Chat with AI Models**: Communicate with AI models using a simple command-line interface.
