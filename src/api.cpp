@@ -10,7 +10,6 @@
 #include "history.h"
 
 const std::string GROQ_API_URL = "https://api.groq.com/openai/v1";
-const std::string DEFAULT_MODEL = "llama-3.3-70b-specdec";
 
 /**
  * Lists all available AI models.
@@ -45,7 +44,7 @@ void listModels(const std::string &apiKey) {
  * @param newChat Whether this is a new chat session.
  */
 void chat(const std::string &prompt, const std::string &model, const std::string &apiKey, const std::string &currentHistory, bool newChat) {
-    std::string selectedModel = model.empty() ? DEFAULT_MODEL : model;
+    std::string selectedModel = model.empty() ? getDefaultModel() : model;
 
     std::string home = getEnvVar("HOME");
     std::string defaultPromptPath = home + "/.config/defaultprompt";

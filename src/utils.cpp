@@ -5,6 +5,8 @@
 #include <memory>
 #include <functional>
 #include <iostream>
+#include <filesystem>
+#include <fstream>
 
 /**
  * Retrieves the value of an environment variable.
@@ -48,4 +50,46 @@ void executeCommand(const std::string &command) {
         std::cerr << "Command failed: " << command << std::endl;
         std::exit(1);
     }
+}
+
+/**
+ * Gets the default model from config file or environment variable.
+ * Checks for the model name in the following order:
+ * 1. Environment variable DEFAULT_MODEL
+ * 2. Config file ~/.config/ai/config
+ * 3. Falls back to a hardcoded default
+ * @return The default model name.
+ */
+std::string getDefaultModel() {
+    // First check environment variable
+    std::string modelFromEnv = getEnvVar("DEFAULT_MODEL");
+    if (!modelFromEnv.empty()) {
+        return modelFromEnv;
+    }
+    
+    // Then check config file
+    std::string home = getEnvVar("HOME");
+    std::string configDir = home + "/.config/ai";
+    std::string configPath = configDir + "/config";
+    
+    if (std::filesystem::exists(configPath)) {
+        std::ifstream configFile(configPath);
+        if (configFile.is_open()) {
+            std::string line;
+            while (std::getline(configFile, line)) {
+                if (line.substr(0, 13) == "DEFAULT_MODEL=") {
+                    std::string modelName = line.substr(13);
+                    // Remove quotes if present
+                    if (modelName.front() == '"' && modelName.back() == '"') {
+                        modelName = modelName.substr(1, modelName.length() - 2);
+                    }
+                    return modelName;
+                }
+            }
+            configFile.close();
+        }
+    }
+    
+    // Fall back to hardcoded default
+    return "llama3-70b-8192";
 }
