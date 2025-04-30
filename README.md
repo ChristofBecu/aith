@@ -2,6 +2,7 @@
 This project is a lightweight C++ application for interacting with AI models in the terminal. It allows users to chat with AI, save conversation histories, and view responses in Markdown format for better clarity.
 
 ## Features
+- **Multi-Provider Support**: Easily switch between different AI providers (Groq, OpenRouter, etc.).
 - **Chat with AI Models**: Communicate with AI models using a simple command-line interface.
 - **History Management**: Save and manage chat histories for future reference.
 - **Markdown Rendering**: Render AI responses in Markdown format for better readability.
@@ -37,14 +38,43 @@ Before building and running the application, ensure you have the following insta
    ```
 
 ## Configuration
-The application uses the following environment variables for configuration:
-- `GROQ_API_URL`: The base URL for the AI API (default: `https://api.groq.com/openai/v1`).
-- `DEFAULT_MODEL`: The default AI model to use (default: `llama-3.3-70b-specdec`).
+The application supports multiple AI providers through a flexible configuration system:
 
-You can set these variables in your shell before running the application:
+### Provider Configuration Files
+Create provider-specific configuration files in `~/.config/ai/` directory:
+
+```
+~/.config/ai/groq.conf
+~/.config/ai/openrouter.conf
+~/.config/ai/anthropic.conf
+# etc...
+```
+
+Each provider file should contain:
+```
+API_URL=https://api.provider.com/path
+API_KEY=your-api-key-here
+DEFAULT_MODEL=provider-model-name
+```
+
+### Default Provider
+Set your default provider in the main config file:
+```
+# ~/.config/ai/config
+DEFAULT_PROVIDER=groq
+```
+
+### Environment Variables
+You can also use environment variables for configuration:
 ```bash
-export GROQ_API_URL="https://your-api-url.com"
-export DEFAULT_MODEL="your-model-name"
+# Set provider-specific variables
+export GROQ_API_KEY="your-api-key"
+export OPENROUTER_API_URL="https://openrouter.ai/api/v1"
+
+# Or use generic variables
+export API_KEY="your-api-key"
+export API_URL="https://api.provider.com/v1"
+export DEFAULT_MODEL="model-name"
 ```
 
 ## Running the Application
@@ -53,12 +83,34 @@ export DEFAULT_MODEL="your-model-name"
    cd build
    ```
 
-2. Run the application:
+2. Run the application with default provider:
    ```bash
-   ./ai
+   ./ai "Your prompt here"
    ```
 
-3. Follow the on-screen instructions to interact with the AI model.
+3. Run with a specific provider:
+   ```bash
+   ./ai --provider=openrouter "Your prompt here"
+   # OR
+   ./ai -p groq "Your prompt here"
+   ```
+
+4. Start a new chat:
+   ```bash
+   ./ai new "Your initial prompt"
+   ```
+
+5. List available models:
+   ```bash
+   ./ai list
+   # OR
+   ./ai --provider=anthropic list
+   ```
+
+6. View your chat history:
+   ```bash
+   ./ai history
+   ```
 
 ## Documentation
 Detailed documentation for the project is available in the `docs/html` directory. Open the `index.html` file in a web browser to view the documentation:

@@ -7,6 +7,8 @@
 #include <iostream>
 #include <filesystem>
 #include <fstream>
+#include <algorithm>
+#include <vector>
 
 /**
  * Retrieves the value of an environment variable.
@@ -98,55 +100,177 @@ std::string getConfigValue(const std::string &key) {
 }
 
 /**
- * Gets the default model from config file or environment variable.
+ * Gets a configuration value from a provider-specific config file.
+ * Reads from ~/.config/ai/{provider}.conf
+ * Checks both lowercase and uppercase variants of the provider name
+ * @param provider The provider name (e.g., "groq", "openrouter")
+ * @param key The configuration key to look for
+ * @return The configuration value or empty string if not found
+ */
+std::string getProviderConfigValue(const std::string &provider, const std::string &key) {
+    // First check environment variable with provider prefix
+    std::string envVarName = provider + "_" + key;
+    std::string valueFromEnv = getEnvVar(envVarName);
+    if (!valueFromEnv.empty()) {
+        return valueFromEnv;
+    }
+    
+    // Also check uppercase environment variable
+    std::string upperProvider = provider;
+    std::transform(upperProvider.begin(), upperProvider.end(), upperProvider.begin(), ::toupper);
+    envVarName = upperProvider + "_" + key;
+    valueFromEnv = getEnvVar(envVarName);
+    if (!valueFromEnv.empty()) {
+        return valueFromEnv;
+    }
+    
+    // Then check provider-specific config file
+    std::string home = getEnvVar("HOME");
+    std::string configDir = home + "/.config/ai";
+    
+    // Create a list of possible config file names with different cases
+    std::vector<std::string> possibleConfigPaths = {
+        configDir + "/" + provider + ".conf",                  // original case (e.g. openrouter.conf)
+        configDir + "/" + upperProvider + ".conf",             // all uppercase (e.g. OPENROUTER.conf)
+        configDir + "/" + provider.substr(0, 1) + provider.substr(1) + ".conf"  // first letter uppercase (e.g. Openrouter.conf)
+    };
+    
+    // Try each possible config file path
+    for (const auto& configPath : possibleConfigPaths) {
+        if (std::filesystem::exists(configPath)) {
+            std::ifstream configFile(configPath);
+            if (configFile.is_open()) {
+                std::string line;
+                std::string searchKey = key + "=";
+                while (std::getline(configFile, line)) {
+                    if (line.substr(0, searchKey.length()) == searchKey) {
+                        std::string value = line.substr(searchKey.length());
+                        // Remove quotes if present
+                        if (value.size() >= 2 && value.front() == '"' && value.back() == '"') {
+                            value = value.substr(1, value.length() - 2);
+                        }
+                        return value;
+                    }
+                }
+                configFile.close();
+            }
+        }
+    }
+    
+    // Fall back to empty string
+    return "";
+}
+
+/**
+ * Gets the default model from the provider's config file.
  * @return The default model name.
  */
 std::string getDefaultModel() {
-    return getConfigValue("DEFAULT_MODEL");
+    std::string provider = getAgent();
+    std::string model = getProviderConfigValue(provider, "DEFAULT_MODEL");
+    if (model.empty()) {
+        // Fall back to main config file
+        model = getConfigValue("DEFAULT_MODEL");
+    }
+    return model;
 }
 
 /**
- * Gets the API URL from config file or environment variable.
+ * Gets the API URL from the provider's config file.
  * @return The API URL.
  */
 std::string getApiUrl() {
-    return getConfigValue("API_URL");
+    std::string provider = getAgent();
+    std::string url = getProviderConfigValue(provider, "API_URL");
+    if (url.empty()) {
+        // Fall back to main config file
+        url = getConfigValue("API_URL");
+    }
+    return url;
+}
+
+// Global variable to store the provider specified via command line
+static std::string commandLineProvider = "";
+
+/**
+ * Sets the provider from command line arguments.
+ * @param provider The provider specified via command line.
+ */
+void setCommandLineProvider(const std::string &provider) {
+    commandLineProvider = provider;
 }
 
 /**
- * Gets the agent type from config file or environment variable.
- * @return The agent type (defaults to "GROQ").
+ * Gets the agent/provider type to use.
+ * Priority order:
+ * 1. Command line specified provider
+ * 2. AGENT environment variable
+ * 3. Default provider from config file
+ * @return The agent/provider type
  */
 std::string getAgent() {
-    return getConfigValue("AGENT");
+    // First check if provider was specified via command line
+    if (!commandLineProvider.empty()) {
+        return commandLineProvider;
+    }
+    
+    // Then check environment variable
+    std::string agent = getEnvVar("AGENT");
+    if (!agent.empty()) {
+        return agent;
+    }
+    
+    // Then check the config file
+    agent = getConfigValue("AGENT");
+    if (!agent.empty()) {
+        return agent;
+    }
+    
+    // Finally, fall back to the default provider
+    return getDefaultProvider();
 }
 
 /**
- * Gets the API key from config file or environment variable.
+ * Gets the API key from the provider's config file.
  * Checks for the API key in the following order:
- * 1. Environment variable GROQ_API_KEY (legacy), OPENAI_API_KEY, etc.
- * 2. Config file ~/.config/ai/config with API_KEY entry
+ * 1. Environment variable with provider prefix (e.g., GROQ_API_KEY)
+ * 2. Provider-specific config file (~/.config/ai/provider.conf)
  * 3. Returns empty string if not found
  * @return The API key.
  */
 std::string getApiKey() {
-    std::string agent = getAgent();
+    std::string provider = getAgent();
     
     // Try agent-specific environment variable
-    std::string envVarName = agent + "_API_KEY";
+    std::string envVarName = provider + "_API_KEY";
     std::string apiKey = getEnvVar(envVarName);
     if (!apiKey.empty()) {
         return apiKey;
     }
     
     // For backward compatibility, try GROQ_API_KEY
-    if (agent == "GROQ") {
+    if (provider == "GROQ" || provider == "groq") {
         apiKey = getEnvVar("GROQ_API_KEY");
         if (!apiKey.empty()) {
             return apiKey;
         }
     }
     
-    // Try generic API_KEY from config file
+    // Read from provider-specific config file
+    apiKey = getProviderConfigValue(provider, "API_KEY");
+    if (!apiKey.empty()) {
+        return apiKey;
+    }
+    
+    // Try generic API_KEY from main config file as last resort
     return getConfigValue("API_KEY");
+}
+
+/**
+ * Gets the default provider from the main config file.
+ * @return The default provider name (defaults to "groq" if not specified)
+ */
+std::string getDefaultProvider() {
+    std::string provider = getConfigValue("DEFAULT_PROVIDER");
+    return provider.empty() ? "groq" : provider;
 }

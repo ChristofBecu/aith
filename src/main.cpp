@@ -1,15 +1,54 @@
 #include <iostream>
 #include <filesystem>
 #include <string>
+#include <vector>
 #include "utils.h"
 #include "api.h"
 #include "history.h"
 #include "markdown.h"
 
+// Helper function to check if an argument starts with a specific prefix
+bool hasPrefix(const std::string& arg, const std::string& prefix) {
+    return arg.substr(0, prefix.size()) == prefix;
+}
+
+// Helper function to extract remaining part after prefix (e.g. --provider=groq -> groq)
+std::string extractValue(const std::string& arg, const std::string& prefix) {
+    return arg.substr(prefix.size());
+}
+
 int main(int argc, char *argv[]) {
+    // Store all arguments in a vector for easier processing
+    std::vector<std::string> args;
+    for (int i = 1; i < argc; ++i) {
+        args.push_back(argv[i]);
+    }
+    
+    // Process special arguments like --provider
+    for (size_t i = 0; i < args.size(); ++i) {
+        // Check for --provider=value or -p value format
+        if (hasPrefix(args[i], "--provider=")) {
+            setCommandLineProvider(extractValue(args[i], "--provider="));
+            args.erase(args.begin() + i);
+            --i; // Adjust index after removal
+        } else if (args[i] == "--provider" || args[i] == "-p") {
+            if (i + 1 < args.size()) {
+                setCommandLineProvider(args[i + 1]);
+                args.erase(args.begin() + i, args.begin() + i + 2);
+                --i; // Adjust index after removal
+            } else {
+                std::cerr << "Error: --provider or -p option requires a value" << std::endl;
+                return 1;
+            }
+        }
+    }
+    
+    // Now proceed with command processing with the remaining arguments
     std::string apiKey = getApiKey();
     if (apiKey.empty()) {
-        std::cerr << "Fout: API_KEY is niet ingesteld in config of omgevingsvariabele." << std::endl;
+        std::string provider = getAgent();
+        std::cerr << "Error: No API key found for provider '" << provider << "'" << std::endl;
+        std::cerr << "Please set API_KEY in ~/.config/ai/" << provider << ".conf or use " << provider << "_API_KEY environment variable." << std::endl;
         return 1;
     }
 
@@ -19,30 +58,31 @@ int main(int argc, char *argv[]) {
 
     std::filesystem::create_directories(historyDir);
 
-    if (argc < 2) {
-        std::cerr << "Gebruik: ./ai [list | history | new \"prompt\" | \"prompt\"] [model (optioneel)]" << std::endl;
+    if (args.empty()) {
+        std::cerr << "Usage: ./ai [--provider=NAME | -p NAME] [list | history | new \"prompt\" | \"prompt\"] [model (optional)]" << std::endl;
         return 1;
     }
 
-    std::string command = argv[1];
+    std::string command = args[0];
     if (command == "list") {
-        std::cout << "Beschikbare modellen:" << std::endl;
+        std::cout << "Available models for provider '" << getAgent() << "':" << std::endl;
         listModels(apiKey);
     } else if (command == "history") {
         for (const auto &entry : std::filesystem::directory_iterator(historyDir)) {
             std::cout << entry.path().filename().string() << std::endl;
         }
     } else if (command == "new") {
-        if (argc < 3) {
-            std::cerr << "Gebruik: ./ai new \"prompt\"" << std::endl;
+        if (args.size() < 2) {
+            std::cerr << "Usage: ./ai [--provider=NAME] new \"prompt\"" << std::endl;
             return 1;
         }
-        std::string prompt = argv[2];
+        std::string prompt = args[1];
         startNewHistory(prompt, historyDir, currentHistory);
-        chat(prompt, argc > 3 ? argv[3] : "", apiKey, currentHistory, true);
+        chat(prompt, args.size() > 2 ? args[2] : "", apiKey, currentHistory, true);
     } else {
-        std::string prompt = argv[1];
-        chat(prompt, argc > 2 ? argv[2] : "", apiKey, currentHistory, false);
+        // First argument is the prompt
+        std::string prompt = args[0];
+        chat(prompt, args.size() > 1 ? args[1] : "", apiKey, currentHistory, false);
     }
 
     return 0;
