@@ -53,18 +53,20 @@ void executeCommand(const std::string &command) {
 }
 
 /**
- * Gets the default model from config file or environment variable.
- * Checks for the model name in the following order:
- * 1. Environment variable DEFAULT_MODEL
+ * Gets a configuration value from config file or environment variable.
+ * Checks for the value in the following order:
+ * 1. Environment variable with the given key
  * 2. Config file ~/.config/ai/config
- * 3. Falls back to a hardcoded default
- * @return The default model name.
+ * 3. Falls back to the provided default value
+ * @param key The configuration key to look for
+ * @param defaultValue The default value to return if not found
+ * @return The configuration value
  */
-std::string getDefaultModel() {
+std::string getConfigValue(const std::string &key) {
     // First check environment variable
-    std::string modelFromEnv = getEnvVar("DEFAULT_MODEL");
-    if (!modelFromEnv.empty()) {
-        return modelFromEnv;
+    std::string valueFromEnv = getEnvVar(key);
+    if (!valueFromEnv.empty()) {
+        return valueFromEnv;
     }
     
     // Then check config file
@@ -76,20 +78,75 @@ std::string getDefaultModel() {
         std::ifstream configFile(configPath);
         if (configFile.is_open()) {
             std::string line;
+            std::string searchKey = key + "=";
             while (std::getline(configFile, line)) {
-                if (line.substr(0, 13) == "DEFAULT_MODEL=") {
-                    std::string modelName = line.substr(13);
+                if (line.substr(0, searchKey.length()) == searchKey) {
+                    std::string value = line.substr(searchKey.length());
                     // Remove quotes if present
-                    if (modelName.front() == '"' && modelName.back() == '"') {
-                        modelName = modelName.substr(1, modelName.length() - 2);
+                    if (value.size() >= 2 && value.front() == '"' && value.back() == '"') {
+                        value = value.substr(1, value.length() - 2);
                     }
-                    return modelName;
+                    return value;
                 }
             }
             configFile.close();
         }
     }
     
-    // Fall back to hardcoded default
-    return "llama3-70b-8192";
+    // Fall back to default value
+    return "";
+}
+
+/**
+ * Gets the default model from config file or environment variable.
+ * @return The default model name.
+ */
+std::string getDefaultModel() {
+    return getConfigValue("DEFAULT_MODEL");
+}
+
+/**
+ * Gets the API URL from config file or environment variable.
+ * @return The API URL.
+ */
+std::string getApiUrl() {
+    return getConfigValue("API_URL");
+}
+
+/**
+ * Gets the agent type from config file or environment variable.
+ * @return The agent type (defaults to "GROQ").
+ */
+std::string getAgent() {
+    return getConfigValue("AGENT");
+}
+
+/**
+ * Gets the API key from config file or environment variable.
+ * Checks for the API key in the following order:
+ * 1. Environment variable GROQ_API_KEY (legacy), OPENAI_API_KEY, etc.
+ * 2. Config file ~/.config/ai/config with API_KEY entry
+ * 3. Returns empty string if not found
+ * @return The API key.
+ */
+std::string getApiKey() {
+    std::string agent = getAgent();
+    
+    // Try agent-specific environment variable
+    std::string envVarName = agent + "_API_KEY";
+    std::string apiKey = getEnvVar(envVarName);
+    if (!apiKey.empty()) {
+        return apiKey;
+    }
+    
+    // For backward compatibility, try GROQ_API_KEY
+    if (agent == "GROQ") {
+        apiKey = getEnvVar("GROQ_API_KEY");
+        if (!apiKey.empty()) {
+            return apiKey;
+        }
+    }
+    
+    // Try generic API_KEY from config file
+    return getConfigValue("API_KEY");
 }

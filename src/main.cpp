@@ -7,9 +7,9 @@
 #include "markdown.h"
 
 int main(int argc, char *argv[]) {
-    std::string apiKey = getEnvVar("GROQ_API_KEY");
+    std::string apiKey = getApiKey();
     if (apiKey.empty()) {
-        std::cerr << "Fout: GROQ_API_KEY is niet ingesteld." << std::endl;
+        std::cerr << "Fout: API_KEY is niet ingesteld in config of omgevingsvariabele." << std::endl;
         return 1;
     }
 

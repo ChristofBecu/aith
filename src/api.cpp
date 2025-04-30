@@ -9,14 +9,20 @@
 #include "markdown.h"
 #include "history.h"
 
-const std::string GROQ_API_URL = "https://api.groq.com/openai/v1";
-
 /**
  * Lists all available AI models.
  * @param apiKey The API key for authentication.
  */
 void listModels(const std::string &apiKey) {
-    std::string command = "curl -s -X GET " + GROQ_API_URL + "/models -H 'Authorization: Bearer " + apiKey + "'";
+    std::string apiUrl = getApiUrl();
+    std::string agent = getAgent();
+    
+    if (agent != "GROQ") {
+        std::cerr << "Listing models for " << agent << " is not implemented yet." << std::endl;
+        //return;
+    }
+    
+    std::string command = "curl -s -X GET " + apiUrl + "/models -H 'Authorization: Bearer " + apiKey + "'";
     std::string result = exec(command.c_str());
 
     Json::Value data;
@@ -45,6 +51,13 @@ void listModels(const std::string &apiKey) {
  */
 void chat(const std::string &prompt, const std::string &model, const std::string &apiKey, const std::string &currentHistory, bool newChat) {
     std::string selectedModel = model.empty() ? getDefaultModel() : model;
+    std::string apiUrl = getApiUrl();
+    std::string agent = getAgent();
+    
+    if (agent != "GROC") {
+        std::cerr << "Chat with " << agent << " is not fully implemented yet." << std::endl;
+        // Continue anyway with default implementation
+    }
 
     std::string home = getEnvVar("HOME");
     std::string defaultPromptPath = home + "/.config/defaultprompt";
@@ -97,7 +110,7 @@ void chat(const std::string &prompt, const std::string &model, const std::string
     outFile << payloadJson;
     outFile.close();
 
-    std::string command = "curl -s -X POST " + GROQ_API_URL + "/chat/completions -H 'Authorization: Bearer " + apiKey + "' -H 'Content-Type: application/json' -d @" + tempFile;
+    std::string command = "curl -s -X POST " + apiUrl + "/chat/completions -H 'Authorization: Bearer " + apiKey + "' -H 'Content-Type: application/json' -d @" + tempFile;
     std::string response = exec(command.c_str());
 
     Json::Value data;
