@@ -71,6 +71,70 @@ int main(int argc, char *argv[]) {
         for (const auto &entry : std::filesystem::directory_iterator(historyDir)) {
             std::cout << entry.path().filename().string() << std::endl;
         }
+    } else if (command == "blacklist") {
+        // Handle blacklist commands
+        if (args.size() < 2) {
+            std::cerr << "Usage: ./ai blacklist [add|remove|list]" << std::endl;
+            return 1;
+        }
+        
+        std::string blacklistCommand = args[1];
+        
+        if (blacklistCommand == "list") {
+            // List all blacklisted models
+            auto blacklistedModels = getBlacklistedModels();
+            
+            if (blacklistedModels.empty()) {
+                std::cout << "No models are currently blacklisted." << std::endl;
+            } else {
+                std::cout << "Blacklisted models:" << std::endl;
+                for (const auto &entry : blacklistedModels) {
+                    std::cout << "- " << entry.provider << " | " << entry.model;
+                    if (!entry.reason.empty()) {
+                        std::cout << " | Reason: " << entry.reason;
+                    }
+                    if (!entry.timestamp.empty()) {
+                        std::cout << " | Added: " << entry.timestamp;
+                    }
+                    std::cout << std::endl;
+                }
+            }
+        } else if (blacklistCommand == "add") {
+            // Add a model to the blacklist
+            if (args.size() < 4) {
+                std::cerr << "Usage: ./ai blacklist add <provider> <model_name> [reason]" << std::endl;
+                return 1;
+            }
+            
+            std::string provider = args[2];
+            std::string modelName = args[3];
+            std::string reason = "";
+            
+            // Check if a reason was provided
+            if (args.size() > 4) {
+                reason = args[4];
+                // Include all remaining arguments as part of the reason
+                for (size_t i = 5; i < args.size(); ++i) {
+                    reason += " " + args[i];
+                }
+            }
+            
+            addModelToBlacklist(provider, modelName, reason);
+        } else if (blacklistCommand == "remove") {
+            // Remove a model from the blacklist
+            if (args.size() < 4) {
+                std::cerr << "Usage: ./ai blacklist remove <provider> <model_name>" << std::endl;
+                return 1;
+            }
+            
+            std::string provider = args[2];
+            std::string modelName = args[3];
+            removeModelFromBlacklist(provider, modelName);
+        } else {
+            std::cerr << "Unknown blacklist command: " << blacklistCommand << std::endl;
+            std::cerr << "Available commands: add, remove, list" << std::endl;
+            return 1;
+        }
     } else if (command == "new") {
         if (args.size() < 2) {
             std::cerr << "Usage: ./ai [--provider=NAME] new \"prompt\"" << std::endl;

@@ -6,6 +6,7 @@ This project is a lightweight C++ application for interacting with AI models in 
 - **Chat with AI Models**: Communicate with AI models using a simple command-line interface.
 - **History Management**: Save and manage chat histories for future reference.
 - **Markdown Rendering**: Render AI responses in Markdown format for better readability.
+- **Model Blacklisting**: Keep track of problematic models across different providers.
 
 ## Prerequisites
 Before building and running the application, ensure you have the following installed on your system:
@@ -111,6 +112,39 @@ export DEFAULT_MODEL="model-name"
    ```bash
    ./ai history
    ```
+
+7. Manage model blacklist:
+   ```bash
+   # List blacklisted models
+   ./ai blacklist list
+   
+   # Add a model to the blacklist
+   ./ai blacklist add <provider> <model_name> [reason]
+   
+   # Remove a model from the blacklist
+   ./ai blacklist remove <provider> <model_name>
+   ```
+
+## Model Blacklist
+The application maintains a blacklist of problematic models to help you avoid using models that don't work well. Blacklisted models are provider-specific, allowing you to blacklist a model on one provider while using it on another.
+
+### Blacklist File Format
+The blacklist is stored at `~/.config/ai/blacklist` in a pipe-separated format:
+```
+provider | model | reason # Added on date and time
+```
+
+For example:
+```
+groq | llama-3-8b-8192 | Produces hallucinations # Added on Thu May 02 10:15:23 2025
+openrouter | claude-instant-1.2 | Very slow responses # Added on Thu May 02 11:30:45 2025
+```
+
+### Blacklist Features
+- **Provider-Specific**: Models are blacklisted per provider, as the same model may perform differently across providers
+- **Visual Indicators**: Blacklisted models are clearly marked as `BLACKLISTED:` in the model listing
+- **Usage Prevention**: The application prevents you from accidentally using blacklisted models
+- **Documentation**: Blacklist entries include reasons and timestamps to help track why models were blacklisted
 
 ## Documentation
 Detailed documentation for the project is available in the `docs/html` directory. Open the `index.html` file in a web browser to view the documentation:

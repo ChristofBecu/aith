@@ -42,7 +42,13 @@ void listModels(const std::string &apiKey) {
     if (data.isMember("data") && data["data"].isArray()) {
         for (const auto &model : data["data"]) {
             if (model.isMember("id")) {
-                std::string info = model["id"].asString();
+                std::string modelId = model["id"].asString();
+                std::string info = modelId;
+                
+                // Check if model is blacklisted for this provider and mark it
+                if (isModelBlacklisted(provider, modelId)) {
+                    info = "BLACKLISTED: " + info;
+                }
                 
                 if (model.isMember("owned_by")) {
                     info += " | Owner: " + model["owned_by"].asString();
@@ -62,7 +68,15 @@ void listModels(const std::string &apiKey) {
     else if (data.isMember("models") && data["models"].isArray()) {
         for (const auto &model : data["models"]) {
             if (model.isMember("id")) {
-                std::cout << model["id"].asString() << std::endl;
+                std::string modelId = model["id"].asString();
+                std::string info = modelId;
+                
+                // Check if model is blacklisted for this provider and mark it
+                if (isModelBlacklisted(provider, modelId)) {
+                    info = "BLACKLISTED: " + info;
+                }
+                
+                std::cout << info << std::endl;
             }
         }
     }
@@ -101,6 +115,13 @@ void chat(const std::string &prompt, const std::string &model, const std::string
     if (selectedModel.empty()) {
         std::cerr << "Error: No model specified and no DEFAULT_MODEL configured for provider " << provider << std::endl;
         std::cerr << "Please specify a model or set the DEFAULT_MODEL in your " << provider << ".conf file." << std::endl;
+        return;
+    }
+    
+    // Check if the model is blacklisted for this provider
+    if (isModelBlacklisted(provider, selectedModel)) {
+        std::cerr << "Error: The model '" << selectedModel << "' is blacklisted for provider '" << provider << "'." << std::endl;
+        std::cerr << "Use 'ai blacklist list' to see blacklisted models, or 'ai blacklist remove " << provider << " " << selectedModel << "' to unblacklist it." << std::endl;
         return;
     }
 
