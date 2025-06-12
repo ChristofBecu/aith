@@ -6,6 +6,7 @@
 #include "system_utils.h"
 #include "config_manager.h"
 #include "provider_manager.h"
+#include "model_blacklist.h"
 
 // System utilities (backward compatibility - deprecated)
 [[deprecated("Use SystemUtils::getEnvVar instead")]]
@@ -35,16 +36,14 @@ std::string getAgent();
 [[deprecated("Use ProviderManager::getApiKey instead")]]
 std::string getApiKey();
 
-// Blacklist functions with provider support
+// Blacklist functions (backward compatibility - deprecated)
+[[deprecated("Use ModelBlacklist::isModelBlacklisted instead")]]
 bool isModelBlacklisted(const std::string &provider, const std::string &modelName);
+[[deprecated("Use ModelBlacklist::addModelToBlacklist instead")]]
 void addModelToBlacklist(const std::string &provider, const std::string &modelName, const std::string &reason = "");
+[[deprecated("Use ModelBlacklist::removeModelFromBlacklist instead")]]
 void removeModelFromBlacklist(const std::string &provider, const std::string &modelName);
-struct BlacklistEntry {
-    std::string provider;
-    std::string model;
-    std::string reason;
-    std::string timestamp;
-};
+[[deprecated("Use ModelBlacklist::getBlacklistedModels instead")]]
 std::vector<BlacklistEntry> getBlacklistedModels();
 
 #endif // UTILS_H

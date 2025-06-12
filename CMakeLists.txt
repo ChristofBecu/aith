@@ -17,6 +17,7 @@ set(SOURCES
     src/system_utils.cpp
     src/config_manager.cpp
     src/provider_manager.cpp
+    src/model_blacklist.cpp
     src/api.cpp
     src/history.cpp
     src/markdown.cpp
