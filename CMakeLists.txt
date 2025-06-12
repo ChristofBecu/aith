@@ -17,6 +17,7 @@ set(SOURCES
     src/api.cpp
     src/history.cpp
     src/markdown.cpp
+    src/benchmark.cpp
 )
 
 # Add executable

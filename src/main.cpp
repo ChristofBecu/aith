@@ -6,6 +6,7 @@
 #include "api.h"
 #include "history.h"
 #include "markdown.h"
+#include "benchmark.h"
 
 // Helper function to check if an argument starts with a specific prefix
 bool hasPrefix(const std::string& arg, const std::string& prefix) {
@@ -59,7 +60,7 @@ int main(int argc, char *argv[]) {
     std::filesystem::create_directories(historyDir);
 
     if (args.empty()) {
-        std::cerr << "Usage: ./ai [--provider=NAME | -p NAME] [list | history | new \"prompt\" | \"prompt\"] [model (optional)]" << std::endl;
+        std::cerr << "Usage: ./ai [--provider=NAME | -p NAME] [list | history | test | blacklist | new \"prompt\" | \"prompt\"] [model (optional)]" << std::endl;
         return 1;
     }
 
@@ -71,6 +72,19 @@ int main(int argc, char *argv[]) {
         for (const auto &entry : std::filesystem::directory_iterator(historyDir)) {
             std::cout << entry.path().filename().string() << std::endl;
         }
+        std::cout << "\n Current history file: " << currentHistory << std::endl;
+    } else if (command == "test") {
+        // Handle benchmark testing
+        std::string testPrompt = "Hello";
+        
+        // Check if custom test prompt was provided
+        if (args.size() > 1) {
+            testPrompt = args[1];
+        }
+        
+        std::cout << "Starting model benchmark tests..." << std::endl;
+        auto results = runAllModelsBenchmark(apiKey, testPrompt);
+        displayBenchmarkResults(results);
     } else if (command == "blacklist") {
         // Handle blacklist commands
         if (args.size() < 2) {
