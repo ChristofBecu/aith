@@ -1,6 +1,7 @@
 #include "utils.h"
 #include "system_utils.h"
 #include "config_manager.h"
+#include "provider_manager.h"
 #include <cstdlib>
 #include <stdexcept>
 #include <array>
@@ -33,118 +34,28 @@ std::string getProviderConfigValue(const std::string &provider, const std::strin
     return ConfigManager::getProviderConfigValue(provider, key);
 }
 
-/**
- * Gets the default model from the provider's config file.
- * @return The default model name.
- */
-std::string getDefaultModel() {
-    std::string provider = getAgent();
-    std::string model = ConfigManager::getProviderConfigValue(provider, "DEFAULT_MODEL");
-    if (model.empty()) {
-        // Fall back to main config file
-        model = ConfigManager::getConfigValue("DEFAULT_MODEL");
-    }
-    return model;
-}
-
-/**
- * Gets the API URL from the provider's config file.
- * @return The API URL.
- */
-std::string getApiUrl() {
-    std::string provider = getAgent();
-    std::string url = ConfigManager::getProviderConfigValue(provider, "API_URL");
-    if (url.empty()) {
-        // Fall back to main config file
-        url = ConfigManager::getConfigValue("API_URL");
-    }
-    return url;
-}
-
-// Global variable to store the provider specified via command line
-static std::string commandLineProvider = "";
-
-/**
- * Sets the provider from command line arguments.
- * @param provider The provider specified via command line.
- */
 void setCommandLineProvider(const std::string &provider) {
-    commandLineProvider = provider;
+    ProviderManager::setCommandLineProvider(provider);
 }
 
-/**
- * Gets the agent/provider type to use.
- * Priority order:
- * 1. Command line specified provider
- * 2. AGENT environment variable
- * 3. Default provider from config file
- * @return The agent/provider type
- */
-std::string getAgent() {
-    // First check if provider was specified via command line
-    if (!commandLineProvider.empty()) {
-        return commandLineProvider;
-    }
-    
-    // Then check environment variable
-    std::string agent = SystemUtils::getEnvVar("AGENT");
-    if (!agent.empty()) {
-        return agent;
-    }
-    
-    // Then check the config file
-    agent = ConfigManager::getConfigValue("AGENT");
-    if (!agent.empty()) {
-        return agent;
-    }
-    
-    // Finally, fall back to the default provider
-    return getDefaultProvider();
-}
-
-/**
- * Gets the API key from the provider's config file.
- * Checks for the API key in the following order:
- * 1. Environment variable with provider prefix (e.g., GROQ_API_KEY)
- * 2. Provider-specific config file (~/.config/ai/provider.conf)
- * 3. Returns empty string if not found
- * @return The API key.
- */
-std::string getApiKey() {
-    std::string provider = getAgent();
-    
-    // Try agent-specific environment variable
-    std::string envVarName = provider + "_API_KEY";
-    std::string apiKey = SystemUtils::getEnvVar(envVarName);
-    if (!apiKey.empty()) {
-        return apiKey;
-    }
-    
-    // For backward compatibility, try GROQ_API_KEY
-    if (provider == "GROQ" || provider == "groq") {
-        apiKey = SystemUtils::getEnvVar("GROQ_API_KEY");
-        if (!apiKey.empty()) {
-            return apiKey;
-        }
-    }
-    
-    // Read from provider-specific config file
-    apiKey = ConfigManager::getProviderConfigValue(provider, "API_KEY");
-    if (!apiKey.empty()) {
-        return apiKey;
-    }
-    
-    // Try generic API_KEY from main config file as last resort
-    return ConfigManager::getConfigValue("API_KEY");
-}
-
-/**
- * Gets the default provider from the main config file.
- * @return The default provider name (defaults to "groq" if not specified)
- */
 std::string getDefaultProvider() {
-    std::string provider = ConfigManager::getConfigValue("DEFAULT_PROVIDER");
-    return provider.empty() ? "groq" : provider;
+    return ProviderManager::getDefaultProvider();
+}
+
+std::string getDefaultModel() {
+    return ProviderManager::getDefaultModel();
+}
+
+std::string getApiUrl() {
+    return ProviderManager::getApiUrl();
+}
+
+std::string getAgent() {
+    return ProviderManager::getAgent();
+}
+
+std::string getApiKey() {
+    return ProviderManager::getApiKey();
 }
 
 /**

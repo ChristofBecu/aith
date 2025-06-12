@@ -5,6 +5,7 @@
 #include <vector>
 #include "system_utils.h"
 #include "config_manager.h"
+#include "provider_manager.h"
 
 // System utilities (backward compatibility - deprecated)
 [[deprecated("Use SystemUtils::getEnvVar instead")]]
@@ -19,11 +20,19 @@ void executeCommand(const std::string &command);
 std::string getConfigValue(const std::string &key);
 [[deprecated("Use ConfigManager::getProviderConfigValue instead")]]
 std::string getProviderConfigValue(const std::string &provider, const std::string &key);
+
+// Provider management utilities (backward compatibility - deprecated)
+[[deprecated("Use ProviderManager::setCommandLineProvider instead")]]
 void setCommandLineProvider(const std::string &provider);
+[[deprecated("Use ProviderManager::getDefaultProvider instead")]]
 std::string getDefaultProvider();
+[[deprecated("Use ProviderManager::getDefaultModel instead")]]
 std::string getDefaultModel();
+[[deprecated("Use ProviderManager::getApiUrl instead")]]
 std::string getApiUrl();
+[[deprecated("Use ProviderManager::getAgent instead")]]
 std::string getAgent();
+[[deprecated("Use ProviderManager::getApiKey instead")]]
 std::string getApiKey();
 
 // Blacklist functions with provider support
