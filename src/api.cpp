@@ -12,7 +12,7 @@
 #include "history.h"
 
 /**
- * Lists all available AI models.
+ * Lists all available aith models.
  * @param apiKey The API key for authentication.
  */
 void listModels(const std::string &apiKey) {
@@ -40,7 +40,7 @@ void listModels(const std::string &apiKey) {
         return;
     }
 
-    // Check if we have data array in the response (OpenAI compatible APIs)
+    // Check if we have data array in the response (Openaith compatible APIs)
     if (data.isMember("data") && data["data"].isArray()) {
         for (const auto &model : data["data"]) {
             if (model.isMember("id")) {
@@ -90,7 +90,7 @@ void listModels(const std::string &apiKey) {
 }
 
 /**
- * Sends a chat request to the AI model.
+ * Sends a chat request to the aith model.
  * @param prompt The input string to send to the model.
  * @param model The model to use for the chat.
  * @param apiKey The API key for authentication.
@@ -123,12 +123,12 @@ void chat(const std::string &prompt, const std::string &model, const std::string
     // Check if the model is blacklisted for this provider
     if (ModelBlacklist::isModelBlacklisted(provider, selectedModel)) {
         std::cerr << "Error: The model '" << selectedModel << "' is blacklisted for provider '" << provider << "'." << std::endl;
-        std::cerr << "Use 'ai blacklist list' to see blacklisted models, or 'ai blacklist remove " << provider << " " << selectedModel << "' to unblacklist it." << std::endl;
+        std::cerr << "Use 'aith blacklist list' to see blacklisted models, or 'aith blacklist remove " << provider << " " << selectedModel << "' to unblacklist it." << std::endl;
         return;
     }
 
     std::string home = SystemUtils::getEnvVar("HOME");
-    std::string defaultPromptPath = home + "/.config/ai/defaultprompt";
+    std::string defaultPromptPath = home + "/.config/aith/defaultprompt";
     std::string defaultPrompt;
     
     // Try to load default prompt from file

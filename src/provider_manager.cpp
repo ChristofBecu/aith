@@ -84,7 +84,7 @@ std::string ProviderManager::getApiUrl() {
  * Gets the API key for the current provider.
  * Checks for the API key in the following order:
  * 1. Environment variable with provider prefix (e.g., GROQ_API_KEY)
- * 2. Provider-specific config file (~/.config/ai/provider.conf)
+ * 2. Provider-specific config file (~/.config/aith/provider.conf)
  * 3. Generic API_KEY from main config file
  * 4. For backward compatibility: GROQ_API_KEY for groq provider
  */

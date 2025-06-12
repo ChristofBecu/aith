@@ -5,10 +5,18 @@
 #include <algorithm>
 
 /**
+ * Gets the main configuration directory path (~/.config/aith)
+ */
+std::string ConfigManager::getConfigDir() {
+    std::string home = SystemUtils::getEnvVar("HOME");
+    return home + "/.config/aith";
+}
+
+/**
  * Gets a configuration value from environment variable or main config file.
  * Checks for the value in the following order:
  * 1. Environment variable with the given key
- * 2. Main config file ~/.config/ai/config
+ * 2. Main config file ~/.config/aith/config
  * 3. Returns empty string if not found
  */
 std::string ConfigManager::getConfigValue(const std::string &key) {
@@ -30,7 +38,7 @@ std::string ConfigManager::getConfigValue(const std::string &key) {
  * Checks for the value in the following order:
  * 1. Environment variable with provider prefix (e.g., GROQ_API_KEY)
  * 2. Environment variable with uppercase provider prefix (e.g., GROQ_API_KEY)
- * 3. Provider-specific config file ~/.config/ai/{provider}.conf
+ * 3. Provider-specific config file ~/.config/aith/{provider}.conf
  * 4. Returns empty string if not found
  */
 std::string ConfigManager::getProviderConfigValue(const std::string &provider, const std::string &key) {
@@ -65,14 +73,6 @@ std::string ConfigManager::getProviderConfigValue(const std::string &provider, c
     
     // Fall back to empty string
     return "";
-}
-
-/**
- * Gets the main configuration directory path (~/.config/ai)
- */
-std::string ConfigManager::getConfigDir() {
-    std::string home = SystemUtils::getEnvVar("HOME");
-    return home + "/.config/ai";
 }
 
 /**

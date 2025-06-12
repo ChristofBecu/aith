@@ -1,13 +1,13 @@
-# AI Chat Application
+# AITH - And It Talks, Human
 
-This project is a lightweight C++ application for interacting with AI models in the terminal. It features a modular architecture with dedicated classes for system operations, configuration management, provider handling, and model blacklisting.
+This project is a lightweight C++ application for interacting with aith models in the terminal. AITH features a modular architecture with dedicated classes for system operations, configuration management, provider handling, and model blacklisting.
 
 ## Features
 
-- **Multi-Provider Support**: Easily switch between different AI providers (Groq, OpenRouter, etc.).
-- **Chat with AI Models**: Communicate with AI models using a simple command-line interface.
+- **Multi-Provider Support**: Easily switch between different aith providers (Groq, OpenRouter, etc.).
+- **Chat with aith Models**: Communicate with aith models using a simple command-line interface.
 - **History Management**: Save and manage chat histories for future reference.
-- **Markdown Rendering**: Render AI responses in Markdown format for better readability.
+- **Markdown Rendering**: Render aith responses in Markdown format for better readability.
 - **Model Blacklisting**: Keep track of problematic models across different providers with automatic blacklisting.
 - **Performance Benchmarking**: Test and compare model response times with built-in benchmarking tools.
 - **Modular Architecture**: Clean separation of concerns with SystemUtils, ConfigManager, ProviderManager, and ModelBlacklist classes.
@@ -28,7 +28,7 @@ Before building and running the application, ensure you have the following insta
 
    ```bash
    git clone <repository-url>
-   cd ai
+   cd aith
    ```
 
 2. Create a build directory and navigate to it:
@@ -110,7 +110,7 @@ export AGENT="groq"  # Sets default provider
 Basic usage follows this pattern:
 
 ```bash
-./ai [--provider=NAME | -p NAME] [list | history | test | blacklist | new "prompt" | "prompt"] [model (optional)]
+./aith [--provider=NAME | -p NAME] [list | history | test | blacklist | new "prompt" | "prompt"] [model (optional)]
 ```
 
 ### Common Commands
@@ -124,61 +124,61 @@ Basic usage follows this pattern:
 2. **Run with default provider:**
 
    ```bash
-   ./ai "Your prompt here"
+   ./aith "Your prompt here"
    ```
 
 3. **Run with a specific provider:**
 
    ```bash
-   ./ai --provider=openrouter "Your prompt here"
+   ./aith --provider=openrouter "Your prompt here"
    # OR
-   ./ai -p groq "Your prompt here"
+   ./aith -p groq "Your prompt here"
    ```
 
 4. **Start a new chat:**
 
    ```bash
-   ./ai new "Your initial prompt"
+   ./aith new "Your initial prompt"
    ```
 
 5. **List available models:**
 
    ```bash
-   ./ai list
+   ./aith list
    # OR with specific provider
-   ./ai --provider=anthropic list
+   ./aith --provider=anthropic list
    ```
 
 6. **View your chat history:**
 
    ```bash
-   ./ai history
+   ./aith history
    ```
 
 7. **Run performance benchmarks:**
 
    ```bash
    # Test all models with default prompt
-   ./ai test
+   ./aith test
    
    # Test with custom prompt
-   ./ai test "How are you?"
+   ./aith test "How are you?"
    
    # Test specific provider's models
-   ./ai --provider=openrouter test "Explain AI"
+   ./aith --provider=openrouter test "Explain AI"
    ```
 
 8. **Manage model blacklist:**
 
    ```bash
    # List blacklisted models
-   ./ai blacklist list
+   ./aith blacklist list
    
    # Add a model to the blacklist
-   ./ai blacklist add <provider> <model_name> [reason]
+   ./aith blacklist add <provider> <model_name> [reason]
    
    # Remove a model from the blacklist
-   ./ai blacklist remove <provider> <model_name>
+   ./aith blacklist remove <provider> <model_name>
    ```
 
 ## Model Blacklist
@@ -187,7 +187,7 @@ The application maintains a sophisticated blacklist system to automatically and 
 
 ### Automatic Blacklisting
 
-During benchmark testing (`./ai test`), models are automatically blacklisted if they:
+During benchmark testing (`./aith test`), models are automatically blacklisted if they:
 
 - Return invalid API response formats
 - Don't support chat completions
@@ -201,13 +201,13 @@ You can manually manage the blacklist using these commands:
 
 ```bash
 # List all blacklisted models
-./ai blacklist list
+./aith blacklist list
 
 # Add a model to blacklist
-./ai blacklist add groq llama-problematic-model "Too many hallucinations"
+./aith blacklist add groq llama-problematic-model "Too many hallucinations"
 
 # Remove a model from blacklist  
-./ai blacklist remove groq llama-problematic-model
+./aith blacklist remove groq llama-problematic-model
 ```
 
 ### Blacklist File Format
@@ -239,13 +239,13 @@ The application includes a comprehensive benchmarking system to test model perfo
 
 ```bash
 # Test all available models with default prompt
-./ai test
+./aith test
 
 # Test with custom prompt
-./ai test "Explain quantum computing"
+./aith test "Explain quantum computing"
 
 # Test specific provider's models
-./ai --provider=openrouter test "How are you?"
+./aith --provider=openrouter test "How are you?"
 ```
 
 ### Benchmark Features
@@ -264,11 +264,11 @@ The application follows a modular architecture with clear separation of concerns
 
 - **SystemUtils**: Handles system-level operations like environment variable access and command execution
 - **ConfigManager**: Manages configuration file reading and parsing with priority resolution
-- **ProviderManager**: Handles AI provider selection, API key management, and provider-specific settings
+- **ProviderManager**: Handles aith provider selection, API key management, and provider-specific settings
 - **ModelBlacklist**: Manages model blacklisting with automatic and manual blacklist operations
 - **API Module**: Handles HTTP requests and API communications
 - **History Module**: Manages chat history storage and retrieval
-- **Markdown Module**: Renders AI responses in formatted Markdown
+- **Markdown Module**: Renders aith responses in formatted Markdown
 - **Benchmark Module**: Provides performance testing and model comparison functionality
 
 ### Configuration Priority

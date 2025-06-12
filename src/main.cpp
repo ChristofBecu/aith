@@ -51,18 +51,18 @@ int main(int argc, char *argv[]) {
     if (apiKey.empty()) {
         std::string provider = ProviderManager::getAgent();
         std::cerr << "Error: No API key found for provider '" << provider << "'" << std::endl;
-        std::cerr << "Please set API_KEY in ~/.config/ai/" << provider << ".conf or use " << provider << "_API_KEY environment variable." << std::endl;
+        std::cerr << "Please set API_KEY in ~/.config/aith/" << provider << ".conf or use " << provider << "_API_KEY environment variable." << std::endl;
         return 1;
     }
 
     std::string home = SystemUtils::getEnvVar("HOME");
-    std::string historyDir = home + "/ai_histories";
+    std::string historyDir = home + "/aith_histories";
     std::string currentHistory = historyDir + "/current_history.json";
 
     std::filesystem::create_directories(historyDir);
 
     if (args.empty()) {
-        std::cerr << "Usage: ./ai [--provider=NAME | -p NAME] [list | history | test | blacklist | new \"prompt\" | \"prompt\"] [model (optional)]" << std::endl;
+        std::cerr << "Usage: aith [--provider=NAME | -p NAME] [list | history | test | blacklist | new \"prompt\" | \"prompt\"] [model (optional)]" << std::endl;
         return 1;
     }
 
@@ -90,7 +90,7 @@ int main(int argc, char *argv[]) {
     } else if (command == "blacklist") {
         // Handle blacklist commands
         if (args.size() < 2) {
-            std::cerr << "Usage: ./ai blacklist [add|remove|list]" << std::endl;
+            std::cerr << "Usage: ./aith blacklist [add|remove|list]" << std::endl;
             return 1;
         }
         
@@ -118,7 +118,7 @@ int main(int argc, char *argv[]) {
         } else if (blacklistCommand == "add") {
             // Add a model to the blacklist
             if (args.size() < 4) {
-                std::cerr << "Usage: ./ai blacklist add <provider> <model_name> [reason]" << std::endl;
+                std::cerr << "Usage: aith blacklist add <provider> <model_name> [reason]" << std::endl;
                 return 1;
             }
             
@@ -139,7 +139,7 @@ int main(int argc, char *argv[]) {
         } else if (blacklistCommand == "remove") {
             // Remove a model from the blacklist
             if (args.size() < 4) {
-                std::cerr << "Usage: ./ai blacklist remove <provider> <model_name>" << std::endl;
+                std::cerr << "Usage: ./aith blacklist remove <provider> <model_name>" << std::endl;
                 return 1;
             }
             
@@ -153,7 +153,7 @@ int main(int argc, char *argv[]) {
         }
     } else if (command == "new") {
         if (args.size() < 2) {
-            std::cerr << "Usage: ./ai [--provider=NAME] new \"prompt\"" << std::endl;
+            std::cerr << "Usage: ./aith [--provider=NAME] new \"prompt\"" << std::endl;
             return 1;
         }
         std::string prompt = args[1];

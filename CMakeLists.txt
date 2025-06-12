@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 
 # Project name
-project(ai)
+project(aith)
 
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 17)
@@ -24,18 +24,18 @@ set(SOURCES
 )
 
 # Add executable
-add_executable(ai ${SOURCES})
+add_executable(aith ${SOURCES})
 
 # Find and link libraries
 find_package(CURL REQUIRED)
 
 # Link the required libraries
-target_link_libraries(ai PRIVATE CURL::libcurl)
+target_link_libraries(aith PRIVATE CURL::libcurl)
 
 # Manually find and link JsonCpp library
 find_library(JSONCPP_LIB jsoncpp REQUIRED)
 if (JSONCPP_LIB)
-    target_link_libraries(ai PRIVATE ${JSONCPP_LIB})
+    target_link_libraries(aith PRIVATE ${JSONCPP_LIB})
 else()
     message(FATAL_ERROR "JsonCpp library not found")
 endif()

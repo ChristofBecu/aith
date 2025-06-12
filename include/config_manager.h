@@ -4,12 +4,12 @@
 #include <vector>
 
 /**
- * @brief Configuration management for AI application.
+ * @brief Configuration management for AITH application.
  * 
  * This class provides static methods for reading configuration values from
  * environment variables and configuration files. It handles both main
- * configuration (~/.config/ai/config) and provider-specific configurations
- * (~/.config/ai/{provider}.conf).
+ * configuration (~/.config/aith/config) and provider-specific configurations
+ * (~/.config/aith/{provider}.conf).
  */
 class ConfigManager {
 public:
@@ -17,7 +17,7 @@ public:
      * Gets a configuration value from environment variable or main config file.
      * Checks for the value in the following order:
      * 1. Environment variable with the given key
-     * 2. Main config file ~/.config/ai/config
+     * 2. Main config file ~/.config/aith/config
      * 3. Returns empty string if not found
      * @param key The configuration key to look for
      * @return The configuration value or empty string if not found
@@ -29,7 +29,7 @@ public:
      * Checks for the value in the following order:
      * 1. Environment variable with provider prefix (e.g., GROQ_API_KEY)
      * 2. Environment variable with uppercase provider prefix (e.g., GROQ_API_KEY)
-     * 3. Provider-specific config file ~/.config/ai/{provider}.conf
+     * 3. Provider-specific config file ~/.config/aith/{provider}.conf
      * 4. Returns empty string if not found
      * @param provider The provider name (e.g., "groq", "openrouter")
      * @param key The configuration key to look for
@@ -39,7 +39,7 @@ public:
 
 private:
     /**
-     * Gets the main configuration directory path (~/.config/ai)
+     * Gets the main configuration directory path (~/.config/aith)
      * @return The configuration directory path
      */
     static std::string getConfigDir();

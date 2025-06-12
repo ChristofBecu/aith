@@ -14,10 +14,10 @@ struct BlacklistEntry {
 };
 
 /**
- * @brief Model blacklist management for AI application.
+ * @brief Model blacklist management for AITH application.
  * 
  * This class manages the blacklist of AI models that should not be used.
- * It handles reading from and writing to the blacklist file (~/.config/ai/blacklist)
+ * It handles reading from and writing to the blacklist file (~/.config/aith/blacklist)
  * with a pipe-separated format: provider | model | reason # Added on timestamp
  */
 class ModelBlacklist {
@@ -54,7 +54,7 @@ public:
 
 private:
     /**
-     * Gets the path to the blacklist file (~/.config/ai/blacklist).
+     * Gets the path to the blacklist file (~/.config/aith/blacklist).
      * @return The absolute path to the blacklist file
      */
     static std::string getBlacklistPath();

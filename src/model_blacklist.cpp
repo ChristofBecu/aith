@@ -201,11 +201,11 @@ std::vector<BlacklistEntry> ModelBlacklist::getBlacklistedModels() {
 }
 
 /**
- * Gets the path to the blacklist file (~/.config/ai/blacklist).
+ * Gets the path to the blacklist file (~/.config/aith/blacklist).
  */
 std::string ModelBlacklist::getBlacklistPath() {
     std::string home = SystemUtils::getEnvVar("HOME");
-    return home + "/.config/ai/blacklist";
+    return home + "/.config/aith/blacklist";
 }
 
 /**
@@ -268,7 +268,7 @@ std::string ModelBlacklist::getCurrentTimestamp() {
  */
 void ModelBlacklist::ensureConfigDirectoryExists() {
     std::string home = SystemUtils::getEnvVar("HOME");
-    std::string configDir = home + "/.config/ai";
+    std::string configDir = home + "/.config/aith";
     
     if (!std::filesystem::exists(configDir)) {
         std::filesystem::create_directories(configDir);
