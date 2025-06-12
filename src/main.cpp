@@ -2,7 +2,9 @@
 #include <filesystem>
 #include <string>
 #include <vector>
-#include "utils.h"
+#include "system_utils.h"
+#include "provider_manager.h"
+#include "model_blacklist.h"
 #include "api.h"
 #include "history.h"
 #include "markdown.h"
@@ -29,12 +31,12 @@ int main(int argc, char *argv[]) {
     for (size_t i = 0; i < args.size(); ++i) {
         // Check for --provider=value or -p value format
         if (hasPrefix(args[i], "--provider=")) {
-            setCommandLineProvider(extractValue(args[i], "--provider="));
+            ProviderManager::setCommandLineProvider(extractValue(args[i], "--provider="));
             args.erase(args.begin() + i);
             --i; // Adjust index after removal
         } else if (args[i] == "--provider" || args[i] == "-p") {
             if (i + 1 < args.size()) {
-                setCommandLineProvider(args[i + 1]);
+                ProviderManager::setCommandLineProvider(args[i + 1]);
                 args.erase(args.begin() + i, args.begin() + i + 2);
                 --i; // Adjust index after removal
             } else {
@@ -45,9 +47,9 @@ int main(int argc, char *argv[]) {
     }
     
     // Now proceed with command processing with the remaining arguments
-    std::string apiKey = getApiKey();
+    std::string apiKey = ProviderManager::getApiKey();
     if (apiKey.empty()) {
-        std::string provider = getAgent();
+        std::string provider = ProviderManager::getAgent();
         std::cerr << "Error: No API key found for provider '" << provider << "'" << std::endl;
         std::cerr << "Please set API_KEY in ~/.config/ai/" << provider << ".conf or use " << provider << "_API_KEY environment variable." << std::endl;
         return 1;
@@ -66,7 +68,7 @@ int main(int argc, char *argv[]) {
 
     std::string command = args[0];
     if (command == "list") {
-        std::cout << "Available models for provider '" << getAgent() << "':" << std::endl;
+        std::cout << "Available models for provider '" << ProviderManager::getAgent() << "':" << std::endl;
         listModels(apiKey);
     } else if (command == "history") {
         for (const auto &entry : std::filesystem::directory_iterator(historyDir)) {
@@ -96,7 +98,7 @@ int main(int argc, char *argv[]) {
         
         if (blacklistCommand == "list") {
             // List all blacklisted models
-            auto blacklistedModels = getBlacklistedModels();
+            auto blacklistedModels = ModelBlacklist::getBlacklistedModels();
             
             if (blacklistedModels.empty()) {
                 std::cout << "No models are currently blacklisted." << std::endl;
@@ -133,7 +135,7 @@ int main(int argc, char *argv[]) {
                 }
             }
             
-            addModelToBlacklist(provider, modelName, reason);
+            ModelBlacklist::addModelToBlacklist(provider, modelName, reason);
         } else if (blacklistCommand == "remove") {
             // Remove a model from the blacklist
             if (args.size() < 4) {
@@ -143,7 +145,7 @@ int main(int argc, char *argv[]) {
             
             std::string provider = args[2];
             std::string modelName = args[3];
-            removeModelFromBlacklist(provider, modelName);
+            ModelBlacklist::removeModelFromBlacklist(provider, modelName);
         } else {
             std::cerr << "Unknown blacklist command: " << blacklistCommand << std::endl;
             std::cerr << "Available commands: add, remove, list" << std::endl;

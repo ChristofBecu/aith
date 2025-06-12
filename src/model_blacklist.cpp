@@ -46,7 +46,7 @@ bool ModelBlacklist::isModelBlacklisted(const std::string &provider, const std::
  */
 void ModelBlacklist::addModelToBlacklist(const std::string &provider, const std::string &modelName, 
                                         const std::string &reason) {
-    if (isModelBlacklisted(provider, modelName)) {
+    if (ModelBlacklist::isModelBlacklisted(provider, modelName)) {
         // Model already blacklisted for this provider, no need to add it again
         std::cout << "Model '" << modelName << "' already blacklisted for provider '" << provider << "'." << std::endl;
         return;

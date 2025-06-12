@@ -1,5 +1,7 @@
 #include "api.h"
-#include "utils.h"
+#include "system_utils.h"
+#include "provider_manager.h"
+#include "model_blacklist.h"
 #include <json/json.h>
 #include <iostream>
 #include <fstream>
@@ -14,8 +16,8 @@
  * @param apiKey The API key for authentication.
  */
 void listModels(const std::string &apiKey) {
-    std::string apiUrl = getApiUrl();
-    std::string provider = getAgent();
+    std::string apiUrl = ProviderManager::getApiUrl();
+    std::string provider = ProviderManager::getAgent();
     
     if (apiUrl.empty()) {
         std::cerr << "Error: No API URL configured for provider '" << provider << "'" << std::endl;
@@ -46,7 +48,7 @@ void listModels(const std::string &apiKey) {
                 std::string info = modelId;
                 
                 // Check if model is blacklisted for this provider and mark it
-                if (isModelBlacklisted(provider, modelId)) {
+                if (ModelBlacklist::isModelBlacklisted(provider, modelId)) {
                     info = "BLACKLISTED: " + info;
                 }
                 
@@ -72,7 +74,7 @@ void listModels(const std::string &apiKey) {
                 std::string info = modelId;
                 
                 // Check if model is blacklisted for this provider and mark it
-                if (isModelBlacklisted(provider, modelId)) {
+                if (ModelBlacklist::isModelBlacklisted(provider, modelId)) {
                     info = "BLACKLISTED: " + info;
                 }
                 
@@ -96,9 +98,9 @@ void listModels(const std::string &apiKey) {
  * @param newChat Whether this is a new chat session.
  */
 void chat(const std::string &prompt, const std::string &model, const std::string &apiKey, const std::string &currentHistory, bool newChat) {
-    std::string selectedModel = model.empty() ? getDefaultModel() : model;
-    std::string apiUrl = getApiUrl();
-    std::string provider = getAgent();
+    std::string selectedModel = model.empty() ? ProviderManager::getDefaultModel() : model;
+    std::string apiUrl = ProviderManager::getApiUrl();
+    std::string provider = ProviderManager::getAgent();
     
     std::cout << "Using provider: " << provider << std::endl;
     std::cout << "Using model: " << selectedModel << std::endl;
@@ -119,7 +121,7 @@ void chat(const std::string &prompt, const std::string &model, const std::string
     }
     
     // Check if the model is blacklisted for this provider
-    if (isModelBlacklisted(provider, selectedModel)) {
+    if (ModelBlacklist::isModelBlacklisted(provider, selectedModel)) {
         std::cerr << "Error: The model '" << selectedModel << "' is blacklisted for provider '" << provider << "'." << std::endl;
         std::cerr << "Use 'ai blacklist list' to see blacklisted models, or 'ai blacklist remove " << provider << " " << selectedModel << "' to unblacklist it." << std::endl;
         return;

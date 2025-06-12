@@ -57,7 +57,7 @@ std::string ProviderManager::getDefaultProvider() {
  * Checks provider-specific config first, then falls back to main config.
  */
 std::string ProviderManager::getDefaultModel() {
-    std::string provider = getAgent();
+    std::string provider = ProviderManager::getAgent();
     std::string model = ConfigManager::getProviderConfigValue(provider, "DEFAULT_MODEL");
     if (model.empty()) {
         // Fall back to main config file
@@ -71,7 +71,7 @@ std::string ProviderManager::getDefaultModel() {
  * Checks provider-specific config first, then falls back to main config.
  */
 std::string ProviderManager::getApiUrl() {
-    std::string provider = getAgent();
+    std::string provider = ProviderManager::getAgent();
     std::string url = ConfigManager::getProviderConfigValue(provider, "API_URL");
     if (url.empty()) {
         // Fall back to main config file
@@ -89,7 +89,7 @@ std::string ProviderManager::getApiUrl() {
  * 4. For backward compatibility: GROQ_API_KEY for groq provider
  */
 std::string ProviderManager::getApiKey() {
-    std::string provider = getAgent();
+    std::string provider = ProviderManager::getAgent();
     
     // Try agent-specific environment variable
     std::string envVarName = provider + "_API_KEY";

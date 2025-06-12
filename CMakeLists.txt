@@ -13,7 +13,6 @@ include_directories(include)
 # Add source files
 set(SOURCES
     src/main.cpp
-    src/utils.cpp
     src/system_utils.cpp
     src/config_manager.cpp
     src/provider_manager.cpp

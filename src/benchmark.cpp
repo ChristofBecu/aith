@@ -1,5 +1,7 @@
 #include "benchmark.h"
-#include "utils.h"
+#include "system_utils.h"
+#include "provider_manager.h"
+#include "model_blacklist.h"
 #include "api.h"
 #include <json/json.h>
 #include <iostream>
@@ -60,7 +62,7 @@ BenchmarkResult runModelBenchmark(const std::string &provider, const std::string
     result.success = false;
     result.responseTimeMs = 0.0;
 
-    std::string apiUrl = getApiUrl();
+    std::string apiUrl = ProviderManager::getApiUrl();
     if (apiUrl.empty()) {
         result.errorMessage = "No API URL configured for provider";
         return result;
@@ -123,7 +125,7 @@ BenchmarkResult runModelBenchmark(const std::string &provider, const std::string
     } else if (!data.isMember("choices") || !data["choices"][0].isMember("message")) {
         result.errorMessage = "Invalid API response format";
         // Auto-blacklist models that don't support chat completions
-        addModelToBlacklist(provider, model, "Auto-blacklisted: Invalid API response format");
+        ModelBlacklist::addModelToBlacklist(provider, model, "Auto-blacklisted: Invalid API response format");
         std::cout << "✗ (Invalid response - auto-blacklisted)" << std::endl;
     } else if (data.isMember("error")) {
         result.errorMessage = data["error"]["message"].asString();
@@ -145,8 +147,8 @@ BenchmarkResult runModelBenchmark(const std::string &provider, const std::string
  */
 std::vector<std::string> getAvailableModels(const std::string &apiKey) {
     std::vector<std::string> models;
-    std::string apiUrl = getApiUrl();
-    std::string provider = getAgent();
+    std::string apiUrl = ProviderManager::getApiUrl();
+    std::string provider = ProviderManager::getAgent();
     
     if (apiUrl.empty()) {
         std::cerr << "Error: No API URL configured for provider '" << provider << "'" << std::endl;
@@ -190,7 +192,7 @@ std::vector<std::string> getAvailableModels(const std::string &apiKey) {
  */
 std::vector<BenchmarkResult> runAllModelsBenchmark(const std::string &apiKey, const std::string &testPrompt) {
     std::vector<BenchmarkResult> results;
-    std::string provider = getAgent();
+    std::string provider = ProviderManager::getAgent();
 
     std::cout << "Running benchmark tests for provider '" << provider << "'..." << std::endl;
     std::cout << "Test prompt: \"" << testPrompt << "\"" << std::endl;
@@ -209,7 +211,7 @@ std::vector<BenchmarkResult> runAllModelsBenchmark(const std::string &apiKey, co
     size_t blacklistedCount = 0;
     
     for (const std::string &model : allModels) {
-        if (isModelBlacklisted(provider, model)) {
+        if (ModelBlacklist::isModelBlacklisted(provider, model)) {
             blacklistedCount++;
         } else {
             modelsToTest.push_back(model);
