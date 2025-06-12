@@ -3,9 +3,14 @@
 
 #include <string>
 #include <vector>
+#include "system_utils.h"
 
+// System utilities (backward compatibility - deprecated)
+[[deprecated("Use SystemUtils::getEnvVar instead")]]
 std::string getEnvVar(const std::string &key);
+[[deprecated("Use SystemUtils::exec instead")]]
 std::string exec(const char* cmd);
+[[deprecated("Use SystemUtils::executeCommand instead")]]
 void executeCommand(const std::string &command);
 std::string getConfigValue(const std::string &key);
 std::string getProviderConfigValue(const std::string &provider, const std::string &key);

@@ -14,6 +14,7 @@ include_directories(include)
 set(SOURCES
     src/main.cpp
     src/utils.cpp
+    src/system_utils.cpp
     src/api.cpp
     src/history.cpp
     src/markdown.cpp

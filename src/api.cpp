@@ -26,7 +26,7 @@ void listModels(const std::string &apiKey) {
     std::cout << "Fetching models from " << provider << " API..." << std::endl;
     
     std::string command = "curl -s -X GET " + apiUrl + "/models -H 'Authorization: Bearer " + apiKey + "'";
-    std::string result = exec(command.c_str());
+    std::string result = SystemUtils::exec(command.c_str());
 
     Json::Value data;
     Json::CharReaderBuilder reader;
@@ -125,7 +125,7 @@ void chat(const std::string &prompt, const std::string &model, const std::string
         return;
     }
 
-    std::string home = getEnvVar("HOME");
+    std::string home = SystemUtils::getEnvVar("HOME");
     std::string defaultPromptPath = home + "/.config/ai/defaultprompt";
     std::string defaultPrompt;
     
@@ -189,7 +189,7 @@ void chat(const std::string &prompt, const std::string &model, const std::string
     
     // Send request to API
     std::string command = "curl -s -X POST " + apiUrl + "/chat/completions -H 'Authorization: Bearer " + apiKey + "' -H 'Content-Type: application/json' -d @" + tempFile;
-    std::string response = exec(command.c_str());
+    std::string response = SystemUtils::exec(command.c_str());
 
     // Parse response
     Json::Value data;

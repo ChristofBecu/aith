@@ -104,7 +104,7 @@ BenchmarkResult runModelBenchmark(const std::string &provider, const std::string
 
     // Send request to API
     std::string command = "curl -s -X POST " + apiUrl + "/chat/completions -H 'Authorization: Bearer " + apiKey + "' -H 'Content-Type: application/json' -d @" + tempFile;
-    std::string response = exec(command.c_str());
+    std::string response = SystemUtils::exec(command.c_str());
 
     // Record end time
     auto endTime = std::chrono::high_resolution_clock::now();
@@ -154,7 +154,7 @@ std::vector<std::string> getAvailableModels(const std::string &apiKey) {
     }
 
     std::string command = "curl -s -X GET " + apiUrl + "/models -H 'Authorization: Bearer " + apiKey + "'";
-    std::string result = exec(command.c_str());
+    std::string result = SystemUtils::exec(command.c_str());
 
     Json::Value data;
     Json::CharReaderBuilder reader;

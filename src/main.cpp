@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    std::string home = getEnvVar("HOME");
+    std::string home = SystemUtils::getEnvVar("HOME");
     std::string historyDir = home + "/ai_histories";
     std::string currentHistory = historyDir + "/current_history.json";
 

@@ -1,4 +1,5 @@
 #include "utils.h"
+#include "system_utils.h"
 #include <cstdlib>
 #include <stdexcept>
 #include <array>
@@ -10,48 +11,17 @@
 #include <algorithm>
 #include <vector>
 
-/**
- * Retrieves the value of an environment variable.
- * @param key The name of the environment variable.
- * @return The value of the environment variable, or an empty string if not found.
- */
+// Backward compatibility wrappers (deprecated)
 std::string getEnvVar(const std::string &key) {
-    const char *val = std::getenv(key.c_str());
-    if (val == nullptr) {
-        return "";
-    }
-    return std::string(val);
+    return SystemUtils::getEnvVar(key);
 }
 
-/**
- * Executes a shell command and returns the output.
- * @param cmd The command to execute.
- * @return The output of the command as a string.
- */
 std::string exec(const char* cmd) {
-    std::array<char, 128> buffer;
-    std::string result;
-    std::unique_ptr<FILE, std::function<void(FILE*)>> pipe(popen(cmd, "r"), [](FILE* f) { pclose(f); });
-    if (!pipe) {
-        throw std::runtime_error("popen() failed!");
-    }
-    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
-        result += buffer.data();
-    }
-    return result;
+    return SystemUtils::exec(cmd);
 }
 
-/**
- * Executes a shell command and checks its return code.
- * @param command The command to execute.
- * If the command fails, the program will terminate with an error message.
- */
 void executeCommand(const std::string &command) {
-    int ret_code = std::system(command.c_str());
-    if (ret_code != 0) {
-        std::cerr << "Command failed: " << command << std::endl;
-        std::exit(1);
-    }
+    SystemUtils::executeCommand(command);
 }
 
 /**
@@ -66,13 +36,13 @@ void executeCommand(const std::string &command) {
  */
 std::string getConfigValue(const std::string &key) {
     // First check environment variable
-    std::string valueFromEnv = getEnvVar(key);
+    std::string valueFromEnv = SystemUtils::getEnvVar(key);
     if (!valueFromEnv.empty()) {
         return valueFromEnv;
     }
     
     // Then check config file
-    std::string home = getEnvVar("HOME");
+    std::string home = SystemUtils::getEnvVar("HOME");
     std::string configDir = home + "/.config/ai";
     std::string configPath = configDir + "/config";
     
@@ -110,7 +80,7 @@ std::string getConfigValue(const std::string &key) {
 std::string getProviderConfigValue(const std::string &provider, const std::string &key) {
     // First check environment variable with provider prefix
     std::string envVarName = provider + "_" + key;
-    std::string valueFromEnv = getEnvVar(envVarName);
+    std::string valueFromEnv = SystemUtils::getEnvVar(envVarName);
     if (!valueFromEnv.empty()) {
         return valueFromEnv;
     }
@@ -119,13 +89,13 @@ std::string getProviderConfigValue(const std::string &provider, const std::strin
     std::string upperProvider = provider;
     std::transform(upperProvider.begin(), upperProvider.end(), upperProvider.begin(), ::toupper);
     envVarName = upperProvider + "_" + key;
-    valueFromEnv = getEnvVar(envVarName);
+    valueFromEnv = SystemUtils::getEnvVar(envVarName);
     if (!valueFromEnv.empty()) {
         return valueFromEnv;
     }
     
     // Then check provider-specific config file
-    std::string home = getEnvVar("HOME");
+    std::string home = SystemUtils::getEnvVar("HOME");
     std::string configDir = home + "/.config/ai";
     
     // Create a list of possible config file names with different cases
@@ -215,7 +185,7 @@ std::string getAgent() {
     }
     
     // Then check environment variable
-    std::string agent = getEnvVar("AGENT");
+    std::string agent = SystemUtils::getEnvVar("AGENT");
     if (!agent.empty()) {
         return agent;
     }
@@ -243,14 +213,14 @@ std::string getApiKey() {
     
     // Try agent-specific environment variable
     std::string envVarName = provider + "_API_KEY";
-    std::string apiKey = getEnvVar(envVarName);
+    std::string apiKey = SystemUtils::getEnvVar(envVarName);
     if (!apiKey.empty()) {
         return apiKey;
     }
     
     // For backward compatibility, try GROQ_API_KEY
     if (provider == "GROQ" || provider == "groq") {
-        apiKey = getEnvVar("GROQ_API_KEY");
+        apiKey = SystemUtils::getEnvVar("GROQ_API_KEY");
         if (!apiKey.empty()) {
             return apiKey;
         }
@@ -282,7 +252,7 @@ std::string getDefaultProvider() {
  * @return True if the model is blacklisted for the provider, false otherwise.
  */
 bool isModelBlacklisted(const std::string &provider, const std::string &modelName) {
-    std::string home = getEnvVar("HOME");
+    std::string home = SystemUtils::getEnvVar("HOME");
     std::string blacklistPath = home + "/.config/ai/blacklist";
     
     if (!std::filesystem::exists(blacklistPath)) {
@@ -347,7 +317,7 @@ void addModelToBlacklist(const std::string &provider, const std::string &modelNa
         return;
     }
     
-    std::string home = getEnvVar("HOME");
+    std::string home = SystemUtils::getEnvVar("HOME");
     std::string configDir = home + "/.config/ai";
     std::string blacklistPath = configDir + "/blacklist";
     
@@ -387,7 +357,7 @@ void addModelToBlacklist(const std::string &provider, const std::string &modelNa
  * @param modelName The name of the model to remove from the blacklist.
  */
 void removeModelFromBlacklist(const std::string &provider, const std::string &modelName) {
-    std::string home = getEnvVar("HOME");
+    std::string home = SystemUtils::getEnvVar("HOME");
     std::string blacklistPath = home + "/.config/ai/blacklist";
     
     if (!std::filesystem::exists(blacklistPath)) {
@@ -472,7 +442,7 @@ void removeModelFromBlacklist(const std::string &provider, const std::string &mo
 std::vector<BlacklistEntry> getBlacklistedModels() {
     std::vector<BlacklistEntry> blacklistedModels;
     
-    std::string home = getEnvVar("HOME");
+    std::string home = SystemUtils::getEnvVar("HOME");
     std::string blacklistPath = home + "/.config/ai/blacklist";
     
     if (!std::filesystem::exists(blacklistPath)) {
