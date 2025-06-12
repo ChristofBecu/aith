@@ -1,5 +1,6 @@
 #include "utils.h"
 #include "system_utils.h"
+#include "config_manager.h"
 #include <cstdlib>
 #include <stdexcept>
 #include <array>
@@ -24,111 +25,12 @@ void executeCommand(const std::string &command) {
     SystemUtils::executeCommand(command);
 }
 
-/**
- * Gets a configuration value from config file or environment variable.
- * Checks for the value in the following order:
- * 1. Environment variable with the given key
- * 2. Config file ~/.config/ai/config
- * 3. Falls back to the provided default value
- * @param key The configuration key to look for
- * @param defaultValue The default value to return if not found
- * @return The configuration value
- */
 std::string getConfigValue(const std::string &key) {
-    // First check environment variable
-    std::string valueFromEnv = SystemUtils::getEnvVar(key);
-    if (!valueFromEnv.empty()) {
-        return valueFromEnv;
-    }
-    
-    // Then check config file
-    std::string home = SystemUtils::getEnvVar("HOME");
-    std::string configDir = home + "/.config/ai";
-    std::string configPath = configDir + "/config";
-    
-    if (std::filesystem::exists(configPath)) {
-        std::ifstream configFile(configPath);
-        if (configFile.is_open()) {
-            std::string line;
-            std::string searchKey = key + "=";
-            while (std::getline(configFile, line)) {
-                if (line.substr(0, searchKey.length()) == searchKey) {
-                    std::string value = line.substr(searchKey.length());
-                    // Remove quotes if present
-                    if (value.size() >= 2 && value.front() == '"' && value.back() == '"') {
-                        value = value.substr(1, value.length() - 2);
-                    }
-                    return value;
-                }
-            }
-            configFile.close();
-        }
-    }
-    
-    // Fall back to default value
-    return "";
+    return ConfigManager::getConfigValue(key);
 }
 
-/**
- * Gets a configuration value from a provider-specific config file.
- * Reads from ~/.config/ai/{provider}.conf
- * Checks both lowercase and uppercase variants of the provider name
- * @param provider The provider name (e.g., "groq", "openrouter")
- * @param key The configuration key to look for
- * @return The configuration value or empty string if not found
- */
 std::string getProviderConfigValue(const std::string &provider, const std::string &key) {
-    // First check environment variable with provider prefix
-    std::string envVarName = provider + "_" + key;
-    std::string valueFromEnv = SystemUtils::getEnvVar(envVarName);
-    if (!valueFromEnv.empty()) {
-        return valueFromEnv;
-    }
-    
-    // Also check uppercase environment variable
-    std::string upperProvider = provider;
-    std::transform(upperProvider.begin(), upperProvider.end(), upperProvider.begin(), ::toupper);
-    envVarName = upperProvider + "_" + key;
-    valueFromEnv = SystemUtils::getEnvVar(envVarName);
-    if (!valueFromEnv.empty()) {
-        return valueFromEnv;
-    }
-    
-    // Then check provider-specific config file
-    std::string home = SystemUtils::getEnvVar("HOME");
-    std::string configDir = home + "/.config/ai";
-    
-    // Create a list of possible config file names with different cases
-    std::vector<std::string> possibleConfigPaths = {
-        configDir + "/" + provider + ".conf",                  // original case (e.g. openrouter.conf)
-        configDir + "/" + upperProvider + ".conf",             // all uppercase (e.g. OPENROUTER.conf)
-        configDir + "/" + provider.substr(0, 1) + provider.substr(1) + ".conf"  // first letter uppercase (e.g. Openrouter.conf)
-    };
-    
-    // Try each possible config file path
-    for (const auto& configPath : possibleConfigPaths) {
-        if (std::filesystem::exists(configPath)) {
-            std::ifstream configFile(configPath);
-            if (configFile.is_open()) {
-                std::string line;
-                std::string searchKey = key + "=";
-                while (std::getline(configFile, line)) {
-                    if (line.substr(0, searchKey.length()) == searchKey) {
-                        std::string value = line.substr(searchKey.length());
-                        // Remove quotes if present
-                        if (value.size() >= 2 && value.front() == '"' && value.back() == '"') {
-                            value = value.substr(1, value.length() - 2);
-                        }
-                        return value;
-                    }
-                }
-                configFile.close();
-            }
-        }
-    }
-    
-    // Fall back to empty string
-    return "";
+    return ConfigManager::getProviderConfigValue(provider, key);
 }
 
 /**
@@ -137,10 +39,10 @@ std::string getProviderConfigValue(const std::string &provider, const std::strin
  */
 std::string getDefaultModel() {
     std::string provider = getAgent();
-    std::string model = getProviderConfigValue(provider, "DEFAULT_MODEL");
+    std::string model = ConfigManager::getProviderConfigValue(provider, "DEFAULT_MODEL");
     if (model.empty()) {
         // Fall back to main config file
-        model = getConfigValue("DEFAULT_MODEL");
+        model = ConfigManager::getConfigValue("DEFAULT_MODEL");
     }
     return model;
 }
@@ -151,10 +53,10 @@ std::string getDefaultModel() {
  */
 std::string getApiUrl() {
     std::string provider = getAgent();
-    std::string url = getProviderConfigValue(provider, "API_URL");
+    std::string url = ConfigManager::getProviderConfigValue(provider, "API_URL");
     if (url.empty()) {
         // Fall back to main config file
-        url = getConfigValue("API_URL");
+        url = ConfigManager::getConfigValue("API_URL");
     }
     return url;
 }
@@ -191,7 +93,7 @@ std::string getAgent() {
     }
     
     // Then check the config file
-    agent = getConfigValue("AGENT");
+    agent = ConfigManager::getConfigValue("AGENT");
     if (!agent.empty()) {
         return agent;
     }
@@ -227,13 +129,13 @@ std::string getApiKey() {
     }
     
     // Read from provider-specific config file
-    apiKey = getProviderConfigValue(provider, "API_KEY");
+    apiKey = ConfigManager::getProviderConfigValue(provider, "API_KEY");
     if (!apiKey.empty()) {
         return apiKey;
     }
     
     // Try generic API_KEY from main config file as last resort
-    return getConfigValue("API_KEY");
+    return ConfigManager::getConfigValue("API_KEY");
 }
 
 /**
@@ -241,7 +143,7 @@ std::string getApiKey() {
  * @return The default provider name (defaults to "groq" if not specified)
  */
 std::string getDefaultProvider() {
-    std::string provider = getConfigValue("DEFAULT_PROVIDER");
+    std::string provider = ConfigManager::getConfigValue("DEFAULT_PROVIDER");
     return provider.empty() ? "groq" : provider;
 }
 

@@ -15,6 +15,7 @@ set(SOURCES
     src/main.cpp
     src/utils.cpp
     src/system_utils.cpp
+    src/config_manager.cpp
     src/api.cpp
     src/history.cpp
     src/markdown.cpp

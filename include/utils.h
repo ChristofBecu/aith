@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include "system_utils.h"
+#include "config_manager.h"
 
 // System utilities (backward compatibility - deprecated)
 [[deprecated("Use SystemUtils::getEnvVar instead")]]
@@ -12,7 +13,11 @@ std::string getEnvVar(const std::string &key);
 std::string exec(const char* cmd);
 [[deprecated("Use SystemUtils::executeCommand instead")]]
 void executeCommand(const std::string &command);
+
+// Configuration utilities (backward compatibility - deprecated)
+[[deprecated("Use ConfigManager::getConfigValue instead")]]
 std::string getConfigValue(const std::string &key);
+[[deprecated("Use ConfigManager::getProviderConfigValue instead")]]
 std::string getProviderConfigValue(const std::string &provider, const std::string &key);
 void setCommandLineProvider(const std::string &provider);
 std::string getDefaultProvider();
