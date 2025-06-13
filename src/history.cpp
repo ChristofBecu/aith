@@ -60,3 +60,48 @@ void addToHistory(const std::string &role, const std::string &content, const std
     historyFile << history;
     historyFile.close();
 }
+
+/**
+ * Ensures that a history file exists, creating it with an empty JSON array if it doesn't.
+ */
+void ensureHistoryFileExists(const std::string &historyPath) {
+    if (!std::filesystem::exists(historyPath)) {
+        std::ofstream file(historyPath);
+        file << "[]";
+        file.close();
+    }
+}
+
+/**
+ * Loads chat history from a file.
+ */
+Json::Value loadChatHistory(const std::string &historyPath) {
+    std::ifstream file(historyPath);
+    Json::Value history;
+    if (file.is_open()) {
+        file >> history;
+        file.close();
+    }
+    return history;
+}
+
+/**
+ * Builds the complete chat history by prepending a system message if provided.
+ */
+Json::Value buildChatHistoryWithSystem(const Json::Value &history, const std::string &systemPrompt) {
+    if (systemPrompt.empty()) {
+        return history;
+    }
+    
+    Json::Value systemMessage;
+    systemMessage["role"] = "system";
+    systemMessage["content"] = systemPrompt;
+
+    Json::Value newHistory(Json::arrayValue);
+    newHistory.append(systemMessage);
+    for (const auto &message : history) {
+        newHistory.append(message);
+    }
+    
+    return newHistory;
+}

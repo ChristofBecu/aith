@@ -131,37 +131,17 @@ void chat(const std::string &prompt, const std::string &model, const std::string
     // Load default prompt using ConfigManager
     std::string defaultPrompt = ConfigManager::getDefaultPrompt();
 
-    // Create history file if it doesn't exist
-    if (!std::filesystem::exists(currentHistory)) {
-        std::ofstream file(currentHistory);
-        file << "[]";
-        file.close();
-    }
+    // Ensure history file exists
+    ensureHistoryFileExists(currentHistory);
 
     // Add user message to history if not a new chat
     if (!newChat) {
         addToHistory("user", prompt, currentHistory);
     }
 
-    // Load chat history
-    std::ifstream file(currentHistory);
-    Json::Value history;
-    file >> history;
-    file.close();
-
-    // Add system message if default prompt exists
-    if (!defaultPrompt.empty()) {
-        Json::Value systemMessage;
-        systemMessage["role"] = "system";
-        systemMessage["content"] = defaultPrompt;
-
-        Json::Value newHistory(Json::arrayValue);
-        newHistory.append(systemMessage);
-        for (const auto &message : history) {
-            newHistory.append(message);
-        }
-        history = newHistory;
-    }
+    // Load and build chat history with system prompt
+    Json::Value history = loadChatHistory(currentHistory);
+    history = buildChatHistoryWithSystem(history, defaultPrompt);
 
     // Build the request payload
     Json::Value payload;
