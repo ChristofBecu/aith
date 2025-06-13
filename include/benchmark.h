@@ -7,6 +7,7 @@
 #include "benchmark_config.h"
 #include "performance_timer.h"
 #include "benchmark_reporter.h"
+#include "benchmark_runner.h"
 
 /**
  * Structure to store benchmark result for a single model
