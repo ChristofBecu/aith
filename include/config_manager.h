@@ -37,6 +37,13 @@ public:
      */
     static std::string getProviderConfigValue(const std::string &provider, const std::string &key);
 
+    /**
+     * Gets the default prompt content from the defaultprompt file.
+     * Reads from ~/.config/aith/defaultprompt if it exists.
+     * @return The default prompt content or empty string if file doesn't exist
+     */
+    static std::string getDefaultPrompt();
+
 private:
     /**
      * Gets the main configuration directory path (~/.config/aith)

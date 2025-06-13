@@ -65,3 +65,6 @@ Thumbs.db
 *.h.pch
 *.h.gch.d
 *.h.pch.d
+
+# Planning files
+/planning/

@@ -2,6 +2,7 @@
 #include "system_utils.h"
 #include "provider_manager.h"
 #include "model_blacklist.h"
+#include "config_manager.h"
 #include <json/json.h>
 #include <iostream>
 #include <fstream>
@@ -40,7 +41,7 @@ void listModels(const std::string &apiKey) {
         return;
     }
 
-    // Check if we have data array in the response (Openaith compatible APIs)
+    // Check if we have data array in the response (Openai compatible APIs)
     if (data.isMember("data") && data["data"].isArray()) {
         for (const auto &model : data["data"]) {
             if (model.isMember("id")) {
@@ -127,18 +128,8 @@ void chat(const std::string &prompt, const std::string &model, const std::string
         return;
     }
 
-    std::string home = SystemUtils::getEnvVar("HOME");
-    std::string defaultPromptPath = home + "/.config/aith/defaultprompt";
-    std::string defaultPrompt;
-    
-    // Try to load default prompt from file
-    if (std::filesystem::exists(defaultPromptPath)) {
-        std::ifstream defaultPromptFile(defaultPromptPath);
-        std::ostringstream buffer;
-        buffer << defaultPromptFile.rdbuf();
-        defaultPrompt = buffer.str();
-        defaultPromptFile.close();
-    }
+    // Load default prompt using ConfigManager
+    std::string defaultPrompt = ConfigManager::getDefaultPrompt();
 
     // Create history file if it doesn't exist
     if (!std::filesystem::exists(currentHistory)) {

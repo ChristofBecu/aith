@@ -133,3 +133,27 @@ std::vector<std::string> ConfigManager::getProviderConfigPaths(const std::string
         configDir + "/" + capitalizedProvider + ".conf" // first letter uppercase (e.g. Openrouter.conf)
     };
 }
+
+/**
+ * Gets the default prompt content from the defaultprompt file.
+ * Reads from ~/.config/aith/defaultprompt if it exists.
+ */
+std::string ConfigManager::getDefaultPrompt() {
+    std::string configDir = getConfigDir();
+    std::string defaultPromptPath = configDir + "/defaultprompt";
+    
+    if (!std::filesystem::exists(defaultPromptPath)) {
+        return "";
+    }
+    
+    std::ifstream defaultPromptFile(defaultPromptPath);
+    if (!defaultPromptFile.is_open()) {
+        return "";
+    }
+    
+    std::ostringstream buffer;
+    buffer << defaultPromptFile.rdbuf();
+    defaultPromptFile.close();
+    
+    return buffer.str();
+}
