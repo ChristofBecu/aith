@@ -134,17 +134,22 @@ int main(int argc, char *argv[]) {
             return 1;
         }
     } else if (command == "new") {
-        if (args.size() < 2) {
-            std::cerr << "Usage: ./aith [--provider=NAME] new \"prompt\"" << std::endl;
+        try {
+            auto cmd = CommandFactory::createCommand(command, args, config);
+            cmd->execute();
+        } catch (const std::exception& e) {
+            std::cerr << "Error: " << e.what() << std::endl;
             return 1;
         }
-        std::string prompt = args[1];
-        startNewHistory(prompt, config.historyDir, config.currentHistory);
-        chat(prompt, args.size() > 2 ? args[2] : "", config.apiKey, config.currentHistory, true);
     } else {
-        // First argument is the prompt
-        std::string prompt = args[0];
-        chat(prompt, args.size() > 1 ? args[1] : "", config.apiKey, config.currentHistory, false);
+        // First argument is the prompt - treat as direct chat command
+        try {
+            auto cmd = CommandFactory::createCommand(command, args, config);
+            cmd->execute();
+        } catch (const std::exception& e) {
+            std::cerr << "Error: " << e.what() << std::endl;
+            return 1;
+        }
     }
 
     return 0;

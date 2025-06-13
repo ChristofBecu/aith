@@ -1,6 +1,7 @@
 #include "command_factory.h"
 #include "list_command.h"
 #include "history_command.h"
+#include "chat_command.h"
 #include <stdexcept>
 #include <algorithm>
 #include <iostream>
@@ -54,9 +55,9 @@ std::unique_ptr<Command> CommandFactory::createCommand(
     } else if (commandName == "blacklist") {
         throw std::runtime_error("BlacklistCommand implementation not yet available - Phase 10");
     } else if (commandName == "new") {
-        throw std::runtime_error("NewCommand implementation not yet available - Phase 8");
+        return std::make_unique<ChatCommand>(commandArgs, config);
     } else if (isChatCommand(commandName)) {
-        throw std::runtime_error("ChatCommand implementation not yet available - Phase 7");
+        return std::make_unique<ChatCommand>(commandArgs, config);
     } else {
         throw std::invalid_argument("Unknown command: " + commandName);
     }
