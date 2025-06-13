@@ -14,6 +14,7 @@ include_directories(include/http)
 include_directories(include/benchmark)
 include_directories(include/chat)
 include_directories(include/utils)
+include_directories(include/commands)
 
 # Source files organized by domain
 set(CORE_SOURCES
@@ -50,6 +51,10 @@ set(UTILS_SOURCES
     src/utils/file_utils.cpp
 )
 
+set(COMMANDS_SOURCES
+    src/commands/command_line_parser.cpp
+)
+
 set(ALL_SOURCES
     src/main.cpp
     ${CORE_SOURCES}
@@ -57,6 +62,7 @@ set(ALL_SOURCES
     ${BENCHMARK_SOURCES}
     ${CHAT_SOURCES}
     ${UTILS_SOURCES}
+    ${COMMANDS_SOURCES}
 )
 
 # Add executable

@@ -9,42 +9,18 @@
 #include "history.h"
 #include "markdown.h"
 #include "benchmark.h"
-
-// Helper function to check if an argument starts with a specific prefix
-bool hasPrefix(const std::string& arg, const std::string& prefix) {
-    return arg.substr(0, prefix.size()) == prefix;
-}
-
-// Helper function to extract remaining part after prefix (e.g. --provider=groq -> groq)
-std::string extractValue(const std::string& arg, const std::string& prefix) {
-    return arg.substr(prefix.size());
-}
+#include "commands/command_line_parser.h"
 
 int main(int argc, char *argv[]) {
-    // Store all arguments in a vector for easier processing
-    std::vector<std::string> args;
-    for (int i = 1; i < argc; ++i) {
-        args.push_back(argv[i]);
+    // Parse command line arguments
+    auto parsedArgs = CommandLineParser::parseArguments(argc, argv);
+    if (parsedArgs.hasError) {
+        std::cerr << parsedArgs.errorMessage << std::endl;
+        return 1;
     }
     
-    // Process special arguments like --provider
-    for (size_t i = 0; i < args.size(); ++i) {
-        // Check for --provider=value or -p value format
-        if (hasPrefix(args[i], "--provider=")) {
-            ProviderManager::setCommandLineProvider(extractValue(args[i], "--provider="));
-            args.erase(args.begin() + i);
-            --i; // Adjust index after removal
-        } else if (args[i] == "--provider" || args[i] == "-p") {
-            if (i + 1 < args.size()) {
-                ProviderManager::setCommandLineProvider(args[i + 1]);
-                args.erase(args.begin() + i, args.begin() + i + 2);
-                --i; // Adjust index after removal
-            } else {
-                std::cerr << "Error: --provider or -p option requires a value" << std::endl;
-                return 1;
-            }
-        }
-    }
+    // Get the remaining arguments after processing special flags
+    std::vector<std::string> args = parsedArgs.remainingArgs;
     
     // Now proceed with command processing with the remaining arguments
     std::string apiKey = ProviderManager::getApiKey();
