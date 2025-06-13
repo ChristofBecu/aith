@@ -4,6 +4,7 @@
 #include "model_blacklist.h"
 #include "config_manager.h"
 #include "http_client.h"
+#include "api_models.h"
 #include <json/json.h>
 #include <iostream>
 #include <fstream>
@@ -30,64 +31,16 @@ void listModels(const std::string &apiKey) {
     std::cout << "Fetching models from " << provider << " API..." << std::endl;
     
     std::string result = HttpClient::get(apiUrl + "/models", apiKey);
-
-    Json::Value data;
-    Json::CharReaderBuilder reader;
-    std::string errs;
-    std::istringstream s(result);
-    if (!Json::parseFromStream(reader, s, &data, &errs)) {
-        std::cerr << "Error parsing JSON: " << errs << std::endl;
+    
+    ModelsListResponse response(result, provider);
+    
+    if (response.hasError()) {
+        std::cerr << "Error: " << response.getErrorMessage() << std::endl;
         std::cerr << "Response: " << result << std::endl;
         return;
     }
-
-    // Check if we have data array in the response (Openai compatible APIs)
-    if (data.isMember("data") && data["data"].isArray()) {
-        for (const auto &model : data["data"]) {
-            if (model.isMember("id")) {
-                std::string modelId = model["id"].asString();
-                std::string info = modelId;
-                
-                // Check if model is blacklisted for this provider and mark it
-                if (ModelBlacklist::isModelBlacklisted(provider, modelId)) {
-                    info = "BLACKLISTED: " + info;
-                }
-                
-                if (model.isMember("owned_by")) {
-                    info += " | Owner: " + model["owned_by"].asString();
-                }
-                
-                if (model.isMember("created") && model["created"].isInt64()) {
-                    std::time_t created = model["created"].asInt64();
-                    std::string date = std::asctime(std::localtime(&created));
-                    info += " | Created: " + date;
-                }
-                
-                std::cout << info << std::endl;
-            }
-        }
-    } 
-    // Some APIs might have different response format
-    else if (data.isMember("models") && data["models"].isArray()) {
-        for (const auto &model : data["models"]) {
-            if (model.isMember("id")) {
-                std::string modelId = model["id"].asString();
-                std::string info = modelId;
-                
-                // Check if model is blacklisted for this provider and mark it
-                if (ModelBlacklist::isModelBlacklisted(provider, modelId)) {
-                    info = "BLACKLISTED: " + info;
-                }
-                
-                std::cout << info << std::endl;
-            }
-        }
-    }
-    // If we can't find any recognizable format, show raw response
-    else {
-        std::cerr << "Unexpected response format. Raw response:" << std::endl;
-        std::cout << result << std::endl;
-    }
+    
+    response.printModels();
 }
 
 /**
@@ -143,38 +96,23 @@ void chat(const std::string &prompt, const std::string &model, const std::string
     Json::Value history = loadChatHistory(currentHistory);
     history = buildChatHistoryWithSystem(history, defaultPrompt);
 
-    // Build the request payload
-    Json::Value payload;
-    payload["model"] = selectedModel;
-    payload["messages"] = history;
-
+    // Create and send chat request
+    ChatRequest request(selectedModel, history);
+    
     std::cout << "Sending request to " << provider << " using model " << selectedModel << "..." << std::endl;
     
-    // Send request to API
-    std::string response = HttpClient::post(apiUrl + "/chat/completions", apiKey, payload);
-
+    std::string responseJson = HttpClient::post(apiUrl + "/chat/completions", apiKey, request.toJson());
+    
     // Parse response
-    Json::Value data;
-    Json::CharReaderBuilder reader;
-    std::string errs;
-    std::istringstream s(response);
-    if (!Json::parseFromStream(reader, s, &data, &errs)) {
-        std::cerr << "Error parsing JSON: " << errs << std::endl;
-        std::cerr << "Response: " << response << std::endl;
+    ChatResponse response(responseJson);
+    
+    if (response.hasError()) {
+        std::cerr << "Error: " << response.getErrorMessage() << std::endl;
+        std::cerr << "Response: " << responseJson << std::endl;
         return;
     }
 
-    // Check if response has expected format
-    if (!data.isMember("choices") || !data["choices"][0].isMember("message")) {
-        std::cerr << "Invalid API response received:" << std::endl;
-        std::cerr << response << std::endl;
-        return;
-    }
-
-    // Extract and display answer
-    std::string answer = data["choices"][0]["message"]["content"].asString();
-    renderMarkdown(answer);
-
-    // Add response to history
-    addToHistory("assistant", answer, currentHistory);
+    // Display and save response
+    renderMarkdown(response.getContent());
+    addToHistory("assistant", response.getContent(), currentHistory);
 }

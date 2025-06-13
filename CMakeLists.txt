@@ -22,6 +22,7 @@ set(SOURCES
     src/markdown.cpp
     src/benchmark.cpp
     src/http_client.cpp
+    src/api_models.cpp
 )
 
 # Add executable
