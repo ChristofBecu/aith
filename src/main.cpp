@@ -10,6 +10,7 @@
 #include "markdown.h"
 #include "benchmark.h"
 #include "commands/command_line_parser.h"
+#include "application_setup.h"
 
 int main(int argc, char *argv[]) {
     // Parse command line arguments
@@ -22,20 +23,14 @@ int main(int argc, char *argv[]) {
     // Get the remaining arguments after processing special flags
     std::vector<std::string> args = parsedArgs.remainingArgs;
     
-    // Now proceed with command processing with the remaining arguments
-    std::string apiKey = ProviderManager::getApiKey();
-    if (apiKey.empty()) {
-        std::string provider = ProviderManager::getAgent();
-        std::cerr << "Error: No API key found for provider '" << provider << "'" << std::endl;
-        std::cerr << "Please set API_KEY in ~/.config/aith/" << provider << ".conf or use " << provider << "_API_KEY environment variable." << std::endl;
+    // Initialize application configuration
+    ApplicationSetup::Config config;
+    try {
+        config = ApplicationSetup::initialize();
+    } catch (const std::runtime_error& e) {
+        // ApplicationSetup handles error messages, just return error code
         return 1;
     }
-
-    std::string home = SystemUtils::getEnvVar("HOME");
-    std::string historyDir = home + "/aith_histories";
-    std::string currentHistory = historyDir + "/current_history.json";
-
-    std::filesystem::create_directories(historyDir);
 
     if (args.empty()) {
         std::cerr << "Usage: aith [--provider=NAME | -p NAME] [list | history | test | blacklist | new \"prompt\" | \"prompt\"] [model (optional)]" << std::endl;
@@ -45,12 +40,12 @@ int main(int argc, char *argv[]) {
     std::string command = args[0];
     if (command == "list") {
         std::cout << "Available models for provider '" << ProviderManager::getAgent() << "':" << std::endl;
-        listModels(apiKey);
+        listModels(config.apiKey);
     } else if (command == "history") {
-        for (const auto &entry : std::filesystem::directory_iterator(historyDir)) {
+        for (const auto &entry : std::filesystem::directory_iterator(config.historyDir)) {
             std::cout << entry.path().filename().string() << std::endl;
         }
-        std::cout << "\n Current history file: " << currentHistory << std::endl;
+        std::cout << "\n Current history file: " << config.currentHistory << std::endl;
     } else if (command == "test") {
         // Handle benchmark testing
         std::string testPrompt = "Hello";
@@ -61,7 +56,7 @@ int main(int argc, char *argv[]) {
         }
         
         std::cout << "Starting model benchmark tests..." << std::endl;
-        auto results = runAllModelsBenchmark(apiKey, testPrompt);
+        auto results = runAllModelsBenchmark(config.apiKey, testPrompt);
         displayBenchmarkResults(results);
     } else if (command == "blacklist") {
         // Handle blacklist commands
@@ -133,12 +128,12 @@ int main(int argc, char *argv[]) {
             return 1;
         }
         std::string prompt = args[1];
-        startNewHistory(prompt, historyDir, currentHistory);
-        chat(prompt, args.size() > 2 ? args[2] : "", apiKey, currentHistory, true);
+        startNewHistory(prompt, config.historyDir, config.currentHistory);
+        chat(prompt, args.size() > 2 ? args[2] : "", config.apiKey, config.currentHistory, true);
     } else {
         // First argument is the prompt
         std::string prompt = args[0];
-        chat(prompt, args.size() > 1 ? args[1] : "", apiKey, currentHistory, false);
+        chat(prompt, args.size() > 1 ? args[1] : "", config.apiKey, config.currentHistory, false);
     }
 
     return 0;

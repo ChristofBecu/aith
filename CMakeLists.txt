@@ -22,6 +22,7 @@ set(CORE_SOURCES
     src/core/config_manager.cpp
     src/core/provider_manager.cpp
     src/core/model_blacklist.cpp
+    src/core/application_setup.cpp
 )
 
 set(HTTP_SOURCES
