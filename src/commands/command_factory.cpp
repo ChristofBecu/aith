@@ -1,5 +1,6 @@
 #include "command_factory.h"
 #include "list_command.h"
+#include "history_command.h"
 #include <stdexcept>
 #include <algorithm>
 #include <iostream>
@@ -41,7 +42,13 @@ std::unique_ptr<Command> CommandFactory::createCommand(
             config.historyDir
         );
     } else if (commandName == "history") {
-        throw std::runtime_error("HistoryCommand implementation not yet available - Phase 6");
+        return std::make_unique<HistoryCommand>(
+            commandArgs,
+            config.apiKey,
+            config.provider,
+            config.currentHistory,
+            config.historyDir
+        );
     } else if (commandName == "test" || commandName == "benchmark") {
         throw std::runtime_error("BenchmarkCommand implementation not yet available - Phase 9");
     } else if (commandName == "blacklist") {

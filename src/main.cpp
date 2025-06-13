@@ -50,10 +50,13 @@ int main(int argc, char *argv[]) {
             return 1;
         }
     } else if (command == "history") {
-        for (const auto &entry : std::filesystem::directory_iterator(config.historyDir)) {
-            std::cout << entry.path().filename().string() << std::endl;
+        try {
+            auto cmd = CommandFactory::createCommand(command, args, config);
+            cmd->execute();
+        } catch (const std::exception& e) {
+            std::cerr << "Error: " << e.what() << std::endl;
+            return 1;
         }
-        std::cout << "\n Current history file: " << config.currentHistory << std::endl;
     } else if (command == "test") {
         // Handle benchmark testing
         std::string testPrompt = "Hello";
