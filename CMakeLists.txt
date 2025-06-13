@@ -21,6 +21,7 @@ set(SOURCES
     src/history.cpp
     src/markdown.cpp
     src/benchmark.cpp
+    src/benchmark_config.cpp
     src/http_client.cpp
     src/api_models.cpp
     src/api_helpers.cpp

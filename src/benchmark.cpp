@@ -1,4 +1,5 @@
 #include "benchmark.h"
+#include "benchmark_config.h"
 #include "system_utils.h"
 #include "provider_manager.h"
 #include "model_blacklist.h"
@@ -62,6 +63,9 @@ BenchmarkResult runModelBenchmark(const std::string &provider, const std::string
     result.success = false;
     result.responseTimeMs = 0.0;
 
+    // Use default test prompt if none provided
+    std::string actualTestPrompt = testPrompt.empty() ? BenchmarkConfig::getDefaultTestPrompt() : testPrompt;
+
     std::string apiUrl = ProviderManager::getApiUrl();
     if (apiUrl.empty()) {
         result.errorMessage = "No API URL configured for provider";
@@ -70,7 +74,7 @@ BenchmarkResult runModelBenchmark(const std::string &provider, const std::string
 
     // Create a temporary history file for this test
     std::string sanitizedModelName = sanitizeModelName(model);
-    std::string tempHistory = "/tmp/benchmark_history_" + sanitizedModelName + ".json";
+    std::string tempHistory = BenchmarkConfig::getTempHistoryPath(sanitizedModelName);
     std::ofstream historyFile(tempHistory);
     historyFile << "[]";
     historyFile.close();
@@ -82,19 +86,19 @@ BenchmarkResult runModelBenchmark(const std::string &provider, const std::string
     Json::Value messages(Json::arrayValue);
     Json::Value userMessage;
     userMessage["role"] = "user";
-    userMessage["content"] = testPrompt;
+    userMessage["content"] = actualTestPrompt;
     messages.append(userMessage);
     payload["messages"] = messages;
 
     // Set a reasonable max_tokens to avoid very long responses
-    payload["max_tokens"] = 50;
+    payload["max_tokens"] = BenchmarkConfig::getMaxTokens();
 
     Json::StreamWriterBuilder writer;
     writer["indentation"] = "";
     std::string payloadJson = Json::writeString(writer, payload);
 
     // Save payload to temp file
-    std::string tempFile = "/tmp/benchmark_payload_" + sanitizedModelName + ".json";
+    std::string tempFile = BenchmarkConfig::getTempPayloadPath(sanitizedModelName);
     std::ofstream outFile(tempFile);
     outFile << payloadJson;
     outFile.close();
@@ -194,8 +198,11 @@ std::vector<BenchmarkResult> runAllModelsBenchmark(const std::string &apiKey, co
     std::vector<BenchmarkResult> results;
     std::string provider = ProviderManager::getAgent();
 
+    // Use default test prompt if none provided
+    std::string actualTestPrompt = testPrompt.empty() ? BenchmarkConfig::getDefaultTestPrompt() : testPrompt;
+
     std::cout << "Running benchmark tests for provider '" << provider << "'..." << std::endl;
-    std::cout << "Test prompt: \"" << testPrompt << "\"" << std::endl;
+    std::cout << "Test prompt: \"" << actualTestPrompt << "\"" << std::endl;
     std::cout << std::endl;
 
     // Get all available models
@@ -228,20 +235,22 @@ std::vector<BenchmarkResult> runAllModelsBenchmark(const std::string &apiKey, co
 
     // Test each non-blacklisted model
     for (const std::string &model : modelsToTest) {
-        BenchmarkResult result = runModelBenchmark(provider, model, apiKey, testPrompt);
+        BenchmarkResult result = runModelBenchmark(provider, model, apiKey, actualTestPrompt);
         results.push_back(result);
     }
 
     // Sort results by response time (successful tests first, then by time)
-    std::sort(results.begin(), results.end(), [](const BenchmarkResult &a, const BenchmarkResult &b) {
-        if (a.success != b.success) {
-            return a.success; // Successful tests first
-        }
-        if (a.success && b.success) {
-            return a.responseTimeMs < b.responseTimeMs; // Faster times first
-        }
-        return false; // Failed tests maintain their order
-    });
+    if (BenchmarkConfig::shouldSortByResponseTime()) {
+        std::sort(results.begin(), results.end(), [](const BenchmarkResult &a, const BenchmarkResult &b) {
+            if (BenchmarkConfig::shouldPrioritizeSuccessfulTests() && a.success != b.success) {
+                return a.success; // Successful tests first
+            }
+            if (a.success && b.success) {
+                return a.responseTimeMs < b.responseTimeMs; // Faster times first
+            }
+            return false; // Failed tests maintain their order
+        });
+    }
 
     return results;
 }
@@ -276,7 +285,8 @@ void displayBenchmarkResults(const std::vector<BenchmarkResult> &results) {
         for (size_t i = 0; i < successful.size(); ++i) {
             const auto &result = successful[i];
             std::cout << (i + 1) << ". " << result.model << " (" << result.provider << ") - " 
-                      << std::fixed << std::setprecision(0) << result.responseTimeMs << "ms" << std::endl;
+                      << std::fixed << std::setprecision(BenchmarkConfig::getResponseTimePrecision()) 
+                      << result.responseTimeMs << "ms" << std::endl;
         }
         std::cout << std::endl;
     }

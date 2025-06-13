@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <chrono>
+#include "benchmark_config.h"
 
 /**
  * Structure to store benchmark result for a single model
@@ -26,7 +27,7 @@ struct BenchmarkResult {
  * @return BenchmarkResult with timing and success information
  */
 BenchmarkResult runModelBenchmark(const std::string &provider, const std::string &model, 
-                                  const std::string &apiKey, const std::string &testPrompt = "Hello");
+                                  const std::string &apiKey, const std::string &testPrompt = "");
 
 /**
  * Runs benchmark tests on all available models for the current provider
@@ -34,7 +35,7 @@ BenchmarkResult runModelBenchmark(const std::string &provider, const std::string
  * @param testPrompt The prompt to use for testing
  * @return Vector of BenchmarkResult sorted by response time
  */
-std::vector<BenchmarkResult> runAllModelsBenchmark(const std::string &apiKey, const std::string &testPrompt = "Hello");
+std::vector<BenchmarkResult> runAllModelsBenchmark(const std::string &apiKey, const std::string &testPrompt = "");
 
 /**
  * Displays benchmark results in a formatted table
