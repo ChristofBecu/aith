@@ -5,6 +5,7 @@
 #include "config_manager.h"
 #include "http_client.h"
 #include "api_models.h"
+#include "api_helpers.h"
 #include <json/json.h>
 #include <iostream>
 #include <fstream>
@@ -22,21 +23,18 @@ void listModels(const std::string &apiKey) {
     std::string apiUrl = ProviderManager::getApiUrl();
     std::string provider = ProviderManager::getAgent();
     
-    if (apiUrl.empty()) {
-        std::cerr << "Error: No API URL configured for provider '" << provider << "'" << std::endl;
-        std::cerr << "Please check your " << provider << ".conf file or set the API_URL environment variable." << std::endl;
+    if (!ApiValidator::validateProviderForModels(provider, apiUrl)) {
         return;
     }
     
-    std::cout << "Fetching models from " << provider << " API..." << std::endl;
+    ApiConsole::displayModelsFetchStatus(provider);
     
     std::string result = HttpClient::get(apiUrl + "/models", apiKey);
     
     ModelsListResponse response(result, provider);
     
     if (response.hasError()) {
-        std::cerr << "Error: " << response.getErrorMessage() << std::endl;
-        std::cerr << "Response: " << result << std::endl;
+        ApiConsole::displayError(response.getErrorMessage(), result);
         return;
     }
     
@@ -56,28 +54,9 @@ void chat(const std::string &prompt, const std::string &model, const std::string
     std::string apiUrl = ProviderManager::getApiUrl();
     std::string provider = ProviderManager::getAgent();
     
-    std::cout << "Using provider: " << provider << std::endl;
-    std::cout << "Using model: " << selectedModel << std::endl;
-    std::cout << "Using API URL: " << apiUrl << std::endl;
-    
+    ApiConsole::displayChatStatus(provider, selectedModel, apiUrl);
 
-    // Check if the API URL and model are available
-    if (apiUrl.empty()) {
-        std::cerr << "Error: No API URL configured for provider " << provider << std::endl;
-        std::cerr << "Please check your " << provider << ".conf file or set the API_URL environment variable." << std::endl;
-        return;
-    }
-    
-    if (selectedModel.empty()) {
-        std::cerr << "Error: No model specified and no DEFAULT_MODEL configured for provider " << provider << std::endl;
-        std::cerr << "Please specify a model or set the DEFAULT_MODEL in your " << provider << ".conf file." << std::endl;
-        return;
-    }
-    
-    // Check if the model is blacklisted for this provider
-    if (ModelBlacklist::isModelBlacklisted(provider, selectedModel)) {
-        std::cerr << "Error: The model '" << selectedModel << "' is blacklisted for provider '" << provider << "'." << std::endl;
-        std::cerr << "Use 'aith blacklist list' to see blacklisted models, or 'aith blacklist remove " << provider << " " << selectedModel << "' to unblacklist it." << std::endl;
+    if (!ApiValidator::validateProviderForChat(provider, apiUrl, selectedModel)) {
         return;
     }
 
@@ -99,7 +78,7 @@ void chat(const std::string &prompt, const std::string &model, const std::string
     // Create and send chat request
     ChatRequest request(selectedModel, history);
     
-    std::cout << "Sending request to " << provider << " using model " << selectedModel << "..." << std::endl;
+    ApiConsole::displayChatRequestStatus(provider, selectedModel);
     
     std::string responseJson = HttpClient::post(apiUrl + "/chat/completions", apiKey, request.toJson());
     
@@ -107,8 +86,7 @@ void chat(const std::string &prompt, const std::string &model, const std::string
     ChatResponse response(responseJson);
     
     if (response.hasError()) {
-        std::cerr << "Error: " << response.getErrorMessage() << std::endl;
-        std::cerr << "Response: " << responseJson << std::endl;
+        ApiConsole::displayError(response.getErrorMessage(), responseJson);
         return;
     }
 

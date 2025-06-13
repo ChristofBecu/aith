@@ -23,6 +23,7 @@ set(SOURCES
     src/benchmark.cpp
     src/http_client.cpp
     src/api_models.cpp
+    src/api_helpers.cpp
 )
 
 # Add executable
