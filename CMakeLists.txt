@@ -14,6 +14,8 @@ include_directories(include)
 set(SOURCES
     src/main.cpp
     src/system_utils.cpp
+    src/string_utils.cpp
+    src/file_utils.cpp
     src/config_manager.cpp
     src/provider_manager.cpp
     src/model_blacklist.cpp

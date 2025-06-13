@@ -31,4 +31,10 @@ public:
      * @throws std::runtime_error if command fails
      */
     static void executeCommand(const std::string &command);
+    
+    /**
+     * Gets the current timestamp as a formatted string.
+     * @return Current timestamp in "YYYY-MM-DD HH:MM:SS" format
+     */
+    static std::string getCurrentTimestamp();
 };

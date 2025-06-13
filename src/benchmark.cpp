@@ -1,55 +1,16 @@
 #include "benchmark.h"
 #include "benchmark_config.h"
 #include "system_utils.h"
+#include "string_utils.h"
+#include "file_utils.h"
 #include "provider_manager.h"
 #include "model_blacklist.h"
 #include "api.h"
 #include <json/json.h>
 #include <iostream>
-#include <fstream>
 #include <sstream>
-#include <ctime>
-#include <filesystem>
 #include <algorithm>
 #include <iomanip>
-
-/**
- * Gets the current timestamp as a string
- */
-std::string getCurrentTimestamp() {
-    auto now = std::chrono::system_clock::now();
-    auto time_t = std::chrono::system_clock::to_time_t(now);
-    std::stringstream ss;
-    ss << std::put_time(std::localtime(&time_t), "%Y-%m-%d %H:%M:%S");
-    return ss.str();
-}
-
-/**
- * Sanitizes a model name for use in file paths
- * Replaces problematic characters with safe alternatives
- */
-std::string sanitizeModelName(const std::string &modelName) {
-    std::string sanitized = modelName;
-    
-    // Replace problematic characters
-    for (char &c : sanitized) {
-        switch (c) {
-            case '/':  c = '_'; break;  // Directory separator
-            case ':':  c = '-'; break;  // Can cause issues on some systems
-            case ' ':  c = '_'; break;  // Spaces in filenames
-            case '\\': c = '_'; break;  // Windows directory separator
-            case '?':  c = '_'; break;  // Query character
-            case '*':  c = '_'; break;  // Wildcard
-            case '<':  c = '_'; break;  // Redirection
-            case '>':  c = '_'; break;  // Redirection
-            case '|':  c = '_'; break;  // Pipe
-            case '"':  c = '_'; break;  // Quote
-            // Keep other characters as-is (alphanumeric, -, _, .)
-        }
-    }
-    
-    return sanitized;
-}
 
 /**
  * Runs a benchmark test on a single model
@@ -59,7 +20,7 @@ BenchmarkResult runModelBenchmark(const std::string &provider, const std::string
     BenchmarkResult result;
     result.provider = provider;
     result.model = model;
-    result.timestamp = getCurrentTimestamp();
+    result.timestamp = SystemUtils::getCurrentTimestamp();
     result.success = false;
     result.responseTimeMs = 0.0;
 
@@ -73,11 +34,8 @@ BenchmarkResult runModelBenchmark(const std::string &provider, const std::string
     }
 
     // Create a temporary history file for this test
-    std::string sanitizedModelName = sanitizeModelName(model);
-    std::string tempHistory = BenchmarkConfig::getTempHistoryPath(sanitizedModelName);
-    std::ofstream historyFile(tempHistory);
-    historyFile << "[]";
-    historyFile.close();
+    std::string sanitizedModelName = StringUtils::sanitizeForFilename(model);
+    std::string tempHistory = FileUtils::createTempJsonFile("[]", "benchmark_history_" + sanitizedModelName);
 
     // Build the request payload
     Json::Value payload;
@@ -98,10 +56,7 @@ BenchmarkResult runModelBenchmark(const std::string &provider, const std::string
     std::string payloadJson = Json::writeString(writer, payload);
 
     // Save payload to temp file
-    std::string tempFile = BenchmarkConfig::getTempPayloadPath(sanitizedModelName);
-    std::ofstream outFile(tempFile);
-    outFile << payloadJson;
-    outFile.close();
+    std::string tempFile = FileUtils::createTempJsonFile(payloadJson, "benchmark_payload_" + sanitizedModelName);
 
     std::cout << "Testing " << model << "... " << std::flush;
 
@@ -140,8 +95,7 @@ BenchmarkResult runModelBenchmark(const std::string &provider, const std::string
     }
 
     // Clean up temporary files
-    std::filesystem::remove(tempFile);
-    std::filesystem::remove(tempHistory);
+    FileUtils::removeFiles({tempFile, tempHistory});
 
     return result;
 }
