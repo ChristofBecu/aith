@@ -59,6 +59,7 @@ set(COMMANDS_SOURCES
     src/commands/history_command.cpp
     src/commands/chat_command.cpp
     src/commands/benchmark_command.cpp
+    src/commands/blacklist_command.cpp
 )
 
 set(ALL_SOURCES
