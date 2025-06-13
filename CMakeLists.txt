@@ -54,6 +54,7 @@ set(UTILS_SOURCES
 
 set(COMMANDS_SOURCES
     src/commands/command_line_parser.cpp
+    src/commands/command_factory.cpp
 )
 
 set(ALL_SOURCES

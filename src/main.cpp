@@ -11,6 +11,7 @@
 #include "benchmark.h"
 #include "commands/command_line_parser.h"
 #include "application_setup.h"
+#include "commands/command_factory.h"
 
 int main(int argc, char *argv[]) {
     // Parse command line arguments
@@ -38,6 +39,11 @@ int main(int argc, char *argv[]) {
     }
 
     std::string command = args[0];
+    
+    // TODO: In future phases, replace this with CommandFactory::createCommand()
+    // For now, CommandFactory is ready but we preserve original behavior
+    // where unrecognized commands are treated as chat prompts
+    
     if (command == "list") {
         std::cout << "Available models for provider '" << ProviderManager::getAgent() << "':" << std::endl;
         listModels(config.apiKey);
