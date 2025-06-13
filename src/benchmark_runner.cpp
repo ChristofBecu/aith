@@ -10,11 +10,11 @@
 #include "file_utils.h"
 #include "provider_manager.h"
 #include "model_blacklist.h"
-#include "api.h"
+#include "http_client.h"
+#include "api_models.h"
 #include <iostream>
 #include <algorithm>
-#include <sstream>
-#include <json/json.h>
+#include <cctype>
 
 BenchmarkResult BenchmarkRunner::runSingleModel(const std::string& provider, 
                                                const std::string& model, 
@@ -89,38 +89,62 @@ std::vector<std::string> BenchmarkRunner::getAvailableModels(const std::string& 
         return models;
     }
 
-    // Execute models API request
-    std::string command = "curl -s -X GET " + apiUrl + "/models -H 'Authorization: Bearer " + apiKey + "'";
-    std::string result = SystemUtils::exec(command.c_str());
-
-    // Parse JSON response
-    Json::Value data;
-    Json::CharReaderBuilder reader;
-    std::string errs;
-    std::istringstream s(result);
-    if (!Json::parseFromStream(reader, s, &data, &errs)) {
-        std::cerr << "Error parsing models JSON: " << errs << std::endl;
+    // Use HttpClient for API request
+    std::string result = HttpClient::get(apiUrl + "/models", apiKey);
+    
+    // Parse using existing ModelsListResponse
+    ModelsListResponse response(result, provider);
+    
+    if (response.hasError()) {
+        std::cerr << "Error: " << response.getErrorMessage() << std::endl;
         return models;
     }
 
     // Extract model IDs from response
-    if (data.isMember("data") && data["data"].isArray()) {
-        for (const auto& model : data["data"]) {
-            if (model.isMember("id")) {
-                std::string modelId = model["id"].asString();
-                models.push_back(modelId);
-            }
-        }
-    } else if (data.isMember("models") && data["models"].isArray()) {
-        for (const auto& model : data["models"]) {
-            if (model.isMember("id")) {
-                std::string modelId = model["id"].asString();
-                models.push_back(modelId);
-            }
+    return extractModelIds(response.getModels());
+}
+
+std::vector<std::string> BenchmarkRunner::extractModelIds(const std::vector<ModelInfo>& models) {
+    std::vector<std::string> modelIds;
+    modelIds.reserve(models.size());
+    
+    for (const auto& model : models) {
+        modelIds.push_back(model.id);
+    }
+    
+    return modelIds;
+}
+
+Json::Value BenchmarkRunner::buildBenchmarkMessages(const std::string& testPrompt) {
+    Json::Value messages(Json::arrayValue);
+    Json::Value message;
+    message["role"] = "user";
+    message["content"] = testPrompt;
+    messages.append(message);
+    return messages;
+}
+
+bool BenchmarkRunner::shouldBlacklistModel(const std::string& errorMessage) {
+    // Check for common error patterns that indicate incompatible models
+    const std::vector<std::string> blacklistPatterns = {
+        "does not support chat completions",
+        "model not found",
+        "model does not exist",
+        "invalid model",
+        "unsupported model",
+        "deprecated model"
+    };
+    
+    std::string lowerError = errorMessage;
+    std::transform(lowerError.begin(), lowerError.end(), lowerError.begin(), ::tolower);
+    
+    for (const std::string& pattern : blacklistPatterns) {
+        if (lowerError.find(pattern) != std::string::npos) {
+            return true;
         }
     }
-
-    return models;
+    
+    return false;
 }
 
 std::vector<std::string> BenchmarkRunner::filterBlacklistedModels(
@@ -181,53 +205,39 @@ BenchmarkResult BenchmarkRunner::executeModelRequest(const std::string& provider
     result.success = false;
     result.responseTimeMs = 0.0;
 
-    // Create temporary history file for this test
-    std::string sanitizedModelName = StringUtils::sanitizeForFilename(model);
-    std::string tempHistory = FileUtils::createTempJsonFile("[]", "benchmark_history_" + sanitizedModelName);
+    // Build chat messages for the request
+    Json::Value messages = buildBenchmarkMessages(testPrompt);
 
-    // Create and validate benchmark request
-    BenchmarkRequest request(model, testPrompt, BenchmarkConfig::getMaxTokens());
-    
-    if (!request.isValid()) {
-        result.errorMessage = "Invalid request: " + request.getValidationError();
-        FileUtils::removeFile(tempHistory);
-        return result;
-    }
-    
-    // Create temporary file with request payload
-    std::string tempFile = request.createTempFile(sanitizedModelName);
+    // Create chat request using existing API models
+    ChatRequest chatRequest(model, messages);
 
     // Display progress
     BenchmarkReporter::displayTestStart(model);
 
-    // Execute timed API request
+    // Execute timed API request using HttpClient
     PerformanceTimer timer;
     timer.start();
 
-    std::string command = "curl -s -X POST " + apiUrl + "/chat/completions -H 'Authorization: Bearer " + apiKey + "' -H 'Content-Type: application/json' -d @" + tempFile;
-    std::string response = SystemUtils::exec(command.c_str());
+    std::string response = HttpClient::post(apiUrl + "/chat/completions", apiKey, chatRequest.toJson());
 
     result.responseTimeMs = timer.stop();
 
-    // Process response
-    BenchmarkResponse benchmarkResponse(response);
+    // Process response using ChatResponse
+    ChatResponse chatResponse(response);
     
-    if (benchmarkResponse.isSuccessful()) {
-        result.success = true;
-    } else {
-        result.errorMessage = benchmarkResponse.getErrorMessage();
+    if (chatResponse.hasError()) {
+        result.errorMessage = chatResponse.getErrorMessage();
         
-        // Auto-blacklist models that don't support chat completions
-        if (benchmarkResponse.shouldBlacklist()) {
-            ModelBlacklist::addModelToBlacklist(provider, model, benchmarkResponse.getBlacklistReason());
+        // Check if this error indicates the model should be blacklisted
+        if (shouldBlacklistModel(chatResponse.getErrorMessage())) {
+            ModelBlacklist::addModelToBlacklist(provider, model, chatResponse.getErrorMessage());
         }
+    } else {
+        result.success = true;
     }
 
     // Display result
     BenchmarkReporter::displayTestResult(result);
-
-    // Clean up temporary files
-    FileUtils::removeFiles({tempFile, tempHistory});
 
     return result;
 }

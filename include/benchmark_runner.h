@@ -2,9 +2,11 @@
 
 #include <string>
 #include <vector>
+#include <json/json.h>
 
-// Forward declaration to avoid circular dependency
+// Forward declarations to avoid circular dependencies
 struct BenchmarkResult;
+struct ModelInfo;
 
 /**
  * Orchestrates benchmark execution workflows
@@ -95,4 +97,25 @@ private:
                                               const std::string& apiKey,
                                               const std::string& testPrompt,
                                               const std::string& apiUrl);
+
+    /**
+     * Extract model IDs from ModelsListResponse for benchmarking
+     * @param response The models list response from API
+     * @return Vector of model ID strings
+     */
+    static std::vector<std::string> extractModelIds(const std::vector<ModelInfo>& models);
+
+    /**
+     * Build simple benchmark messages for chat completion request
+     * @param testPrompt The test prompt to send
+     * @return JSON messages array for chat completion
+     */
+    static Json::Value buildBenchmarkMessages(const std::string& testPrompt);
+
+    /**
+     * Determine if a model should be blacklisted based on error message
+     * @param errorMessage The error message from API response
+     * @return True if the model should be blacklisted
+     */
+    static bool shouldBlacklistModel(const std::string& errorMessage);
 };
