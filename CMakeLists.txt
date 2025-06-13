@@ -27,6 +27,7 @@ set(SOURCES
     src/benchmark_request.cpp
     src/benchmark_response.cpp
     src/performance_timer.cpp
+    src/benchmark_reporter.cpp
     src/http_client.cpp
     src/api_models.cpp
     src/api_helpers.cpp

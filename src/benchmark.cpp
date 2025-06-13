@@ -3,6 +3,7 @@
 #include "benchmark_request.h"
 #include "benchmark_response.h"
 #include "performance_timer.h"
+#include "benchmark_reporter.h"
 #include "system_utils.h"
 #include "string_utils.h"
 #include "file_utils.h"
@@ -51,7 +52,7 @@ BenchmarkResult runModelBenchmark(const std::string &provider, const std::string
     // Create temporary file with request payload
     std::string tempFile = request.createTempFile(sanitizedModelName);
 
-    std::cout << "Testing " << model << "... " << std::flush;
+    BenchmarkReporter::displayTestStart(model);
 
     // Create performance timer and start measuring
     PerformanceTimer timer;
@@ -69,20 +70,17 @@ BenchmarkResult runModelBenchmark(const std::string &provider, const std::string
     
     if (benchmarkResponse.isSuccessful()) {
         result.success = true;
-        std::cout << "✓ (" << result.responseTimeMs << "ms)" << std::endl;
     } else {
         result.errorMessage = benchmarkResponse.getErrorMessage();
         
         // Auto-blacklist models that don't support chat completions
         if (benchmarkResponse.shouldBlacklist()) {
             ModelBlacklist::addModelToBlacklist(provider, model, benchmarkResponse.getBlacklistReason());
-            std::cout << "✗ (Invalid response - auto-blacklisted)" << std::endl;
-        } else if (!benchmarkResponse.isParseable()) {
-            std::cout << "✗ (JSON parse error)" << std::endl;
-        } else {
-            std::cout << "✗ (" << result.errorMessage << ")" << std::endl;
         }
     }
+
+    // Display the test result
+    BenchmarkReporter::displayTestResult(result);
 
     // Clean up temporary files
     FileUtils::removeFiles({tempFile, tempHistory});
@@ -145,15 +143,13 @@ std::vector<BenchmarkResult> runAllModelsBenchmark(const std::string &apiKey, co
     // Use default test prompt if none provided
     std::string actualTestPrompt = testPrompt.empty() ? BenchmarkConfig::getDefaultTestPrompt() : testPrompt;
 
-    std::cout << "Running benchmark tests for provider '" << provider << "'..." << std::endl;
-    std::cout << "Test prompt: \"" << actualTestPrompt << "\"" << std::endl;
-    std::cout << std::endl;
+    BenchmarkReporter::displayBenchmarkHeader(provider, actualTestPrompt);
 
     // Get all available models
     std::vector<std::string> allModels = getAvailableModels(apiKey);
     
     if (allModels.empty()) {
-        std::cerr << "No models found for provider '" << provider << "'" << std::endl;
+        BenchmarkReporter::displayNoModelsError(provider);
         return results;
     }
 
@@ -170,12 +166,7 @@ std::vector<BenchmarkResult> runAllModelsBenchmark(const std::string &apiKey, co
     }
 
     // Display filtering information
-    std::cout << "Found " << allModels.size() << " models total";
-    if (blacklistedCount > 0) {
-        std::cout << ", filtering out " << blacklistedCount << " blacklisted models";
-    }
-    std::cout << std::endl;
-    std::cout << "Testing " << modelsToTest.size() << " models:" << std::endl;
+    BenchmarkReporter::displayModelCounts(allModels.size(), blacklistedCount, modelsToTest.size());
 
     // Test each non-blacklisted model
     for (const std::string &model : modelsToTest) {
@@ -203,51 +194,5 @@ std::vector<BenchmarkResult> runAllModelsBenchmark(const std::string &apiKey, co
  * Displays benchmark results in a formatted table
  */
 void displayBenchmarkResults(const std::vector<BenchmarkResult> &results) {
-    if (results.empty()) {
-        std::cout << "No benchmark results to display." << std::endl;
-        return;
-    }
-
-    std::cout << std::endl;
-    std::cout << "=== BENCHMARK RESULTS ===" << std::endl;
-    std::cout << std::endl;
-
-    // Display successful results
-    std::vector<BenchmarkResult> successful;
-    std::vector<BenchmarkResult> failed;
-    
-    for (const auto &result : results) {
-        if (result.success) {
-            successful.push_back(result);
-        } else {
-            failed.push_back(result);
-        }
-    }
-
-    if (!successful.empty()) {
-        std::cout << "✓ Successful tests (sorted by speed):" << std::endl;
-        for (size_t i = 0; i < successful.size(); ++i) {
-            const auto &result = successful[i];
-            std::cout << (i + 1) << ". " << result.model << " (" << result.provider << ") - " 
-                      << std::fixed << std::setprecision(BenchmarkConfig::getResponseTimePrecision()) 
-                      << result.responseTimeMs << "ms" << std::endl;
-        }
-        std::cout << std::endl;
-    }
-
-    if (!failed.empty()) {
-        std::cout << "✗ Failed tests:" << std::endl;
-        for (const auto &result : failed) {
-            std::cout << result.model << " (" << result.provider << ") - " << result.errorMessage << std::endl;
-        }
-        std::cout << std::endl;
-    }
-
-    // Summary
-    std::cout << "Summary: " << successful.size() << " successful, " << failed.size() << " failed" << std::endl;
-    
-    if (!successful.empty()) {
-        const auto &fastest = successful[0];
-        std::cout << "Fastest model: " << fastest.model << " (" << fastest.responseTimeMs << "ms)" << std::endl;
-    }
+    BenchmarkReporter::displayResults(results);
 }
