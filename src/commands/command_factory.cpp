@@ -1,4 +1,5 @@
 #include "command_factory.h"
+#include "list_command.h"
 #include <stdexcept>
 #include <algorithm>
 #include <iostream>
@@ -31,12 +32,14 @@ std::unique_ptr<Command> CommandFactory::createCommand(
     
     validateCommandName(commandName);
     
-    // TODO: In future phases, replace these with actual command class instantiations
-    // For now, we'll throw an exception indicating the command infrastructure is ready
-    // but specific command implementations are not yet available
-    
     if (commandName == "list") {
-        throw std::runtime_error("ListCommand implementation not yet available - Phase 5");
+        return std::make_unique<ListCommand>(
+            commandArgs,
+            config.apiKey,
+            config.provider,
+            config.currentHistory,
+            config.historyDir
+        );
     } else if (commandName == "history") {
         throw std::runtime_error("HistoryCommand implementation not yet available - Phase 6");
     } else if (commandName == "test" || commandName == "benchmark") {

@@ -40,13 +40,15 @@ int main(int argc, char *argv[]) {
 
     std::string command = args[0];
     
-    // TODO: In future phases, replace this with CommandFactory::createCommand()
-    // For now, CommandFactory is ready but we preserve original behavior
-    // where unrecognized commands are treated as chat prompts
-    
+    // Use CommandFactory for implemented commands
     if (command == "list") {
-        std::cout << "Available models for provider '" << ProviderManager::getAgent() << "':" << std::endl;
-        listModels(config.apiKey);
+        try {
+            auto cmd = CommandFactory::createCommand(command, args, config);
+            cmd->execute();
+        } catch (const std::exception& e) {
+            std::cerr << "Error: " << e.what() << std::endl;
+            return 1;
+        }
     } else if (command == "history") {
         for (const auto &entry : std::filesystem::directory_iterator(config.historyDir)) {
             std::cout << entry.path().filename().string() << std::endl;
