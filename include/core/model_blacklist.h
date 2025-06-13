@@ -2,6 +2,10 @@
 
 #include <string>
 #include <vector>
+#include <memory>
+
+// Forward declaration
+class BlacklistFileManager;
 
 /**
  * @brief Structure representing a blacklisted model entry.
@@ -54,10 +58,10 @@ public:
 
 private:
     /**
-     * Gets the path to the blacklist file (~/.config/aith/blacklist).
-     * @return The absolute path to the blacklist file
+     * Gets the file manager instance for blacklist operations.
+     * @return Reference to the BlacklistFileManager instance
      */
-    static std::string getBlacklistPath();
+    static BlacklistFileManager& getFileManager();
     
     /**
      * Parses a blacklist line into provider, model, and reason components.
@@ -85,9 +89,4 @@ private:
      * @return Current date and time as a string
      */
     static std::string getCurrentTimestamp();
-    
-    /**
-     * Ensures the config directory exists and creates it if necessary.
-     */
-    static void ensureConfigDirectoryExists();
 };

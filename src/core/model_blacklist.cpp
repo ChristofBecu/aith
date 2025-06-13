@@ -1,41 +1,48 @@
 #include "model_blacklist.h"
-#include "system_utils.h"
-#include <filesystem>
-#include <fstream>
+#include "blacklist_file_manager.h"
 #include <iostream>
 #include <sstream>
 #include <ctime>
 #include <algorithm>
 
 /**
+ * Gets the file manager instance for blacklist operations.
+ */
+BlacklistFileManager& ModelBlacklist::getFileManager() {
+    static BlacklistFileManager instance;
+    return instance;
+}
+
+/**
  * Checks if a model is blacklisted for a specific provider.
  */
 bool ModelBlacklist::isModelBlacklisted(const std::string &provider, const std::string &modelName) {
-    std::string blacklistPath = getBlacklistPath();
+    BlacklistFileManager& fileManager = getFileManager();
     
-    if (!std::filesystem::exists(blacklistPath)) {
+    if (!fileManager.exists()) {
         return false;
     }
     
-    std::ifstream blacklistFile(blacklistPath);
-    if (!blacklistFile.is_open()) {
+    try {
+        std::vector<std::string> lines = fileManager.readAllLines();
+        
+        for (const std::string& line : lines) {
+            // Skip empty lines and comments
+            if (line.empty() || line[0] == '#') {
+                continue;
+            }
+            
+            // Parse the line
+            std::vector<std::string> parts = parseBlacklistLine(line);
+            
+            // Check if we have at least provider and model and they match
+            if (parts.size() >= 2 && parts[0] == provider && parts[1] == modelName) {
+                return true;
+            }
+        }
+    } catch (const std::runtime_error& e) {
+        std::cerr << "Error reading blacklist file: " << e.what() << std::endl;
         return false;
-    }
-    
-    std::string line;
-    while (std::getline(blacklistFile, line)) {
-        // Skip empty lines and comments
-        if (line.empty() || line[0] == '#') {
-            continue;
-        }
-        
-        // Parse the line
-        std::vector<std::string> parts = parseBlacklistLine(line);
-        
-        // Check if we have at least provider and model and they match
-        if (parts.size() >= 2 && parts[0] == provider && parts[1] == modelName) {
-            return true;
-        }
     }
     
     return false;
@@ -52,95 +59,75 @@ void ModelBlacklist::addModelToBlacklist(const std::string &provider, const std:
         return;
     }
     
-    ensureConfigDirectoryExists();
-    
-    std::string blacklistPath = getBlacklistPath();
-    
-    // Open the blacklist file in append mode
-    std::ofstream blacklistFile(blacklistPath, std::ios::app);
-    if (!blacklistFile.is_open()) {
-        std::cerr << "Error: Could not open blacklist file for writing" << std::endl;
-        return;
-    }
+    BlacklistFileManager& fileManager = getFileManager();
     
     // Get current timestamp
     std::string timestamp = getCurrentTimestamp();
     
-    // Write the entry to the blacklist file in pipe-separated format
-    blacklistFile << provider << " | " << modelName << " | ";
+    // Create the entry line in pipe-separated format
+    std::string entryLine = provider + " | " + modelName + " | ";
     if (!reason.empty()) {
-        blacklistFile << reason;
+        entryLine += reason;
     }
-    blacklistFile << " # Added on " << timestamp << std::endl;
+    entryLine += " # Added on " + timestamp;
     
-    blacklistFile.close();
-    
-    std::cout << "Model '" << modelName << "' added to blacklist for provider '" << provider << "'." << std::endl;
+    try {
+        fileManager.appendLine(entryLine);
+        std::cout << "Model '" << modelName << "' added to blacklist for provider '" << provider << "'." << std::endl;
+    } catch (const std::runtime_error& e) {
+        std::cerr << "Error: Could not add model to blacklist - " << e.what() << std::endl;
+    }
 }
 
 /**
  * Removes a model from the blacklist for a specific provider.
  */
 void ModelBlacklist::removeModelFromBlacklist(const std::string &provider, const std::string &modelName) {
-    std::string blacklistPath = getBlacklistPath();
+    BlacklistFileManager& fileManager = getFileManager();
     
-    if (!std::filesystem::exists(blacklistPath)) {
-        std::cerr << "Blacklist file does not exist." << std::endl;
+    if (!fileManager.exists()) {
+        std::cout << "Blacklist file does not exist." << std::endl;
         return;
     }
     
-    // Read the entire blacklist file
-    std::ifstream blacklistFile(blacklistPath);
-    if (!blacklistFile.is_open()) {
-        std::cerr << "Error: Could not open blacklist file for reading" << std::endl;
-        return;
-    }
-    
-    std::vector<std::string> lines;
-    std::string line;
-    bool modelFound = false;
-    
-    while (std::getline(blacklistFile, line)) {
-        bool keepLine = true;
+    try {
+        // Read the entire blacklist file
+        std::vector<std::string> lines = fileManager.readAllLines();
+        std::vector<std::string> filteredLines;
+        bool modelFound = false;
         
-        // Skip empty lines and comments
-        if (!line.empty() && line[0] != '#') {
-            // Parse the line
-            std::vector<std::string> parts = parseBlacklistLine(line);
+        for (const std::string& line : lines) {
+            bool keepLine = true;
             
-            // Check if we have at least provider and model and they match
-            if (parts.size() >= 2 && parts[0] == provider && parts[1] == modelName) {
-                keepLine = false;
-                modelFound = true;
+            // Skip empty lines and comments
+            if (!line.empty() && line[0] != '#') {
+                // Parse the line
+                std::vector<std::string> parts = parseBlacklistLine(line);
+                
+                // Check if we have at least provider and model and they match
+                if (parts.size() >= 2 && parts[0] == provider && parts[1] == modelName) {
+                    keepLine = false;
+                    modelFound = true;
+                }
+            }
+            
+            if (keepLine) {
+                filteredLines.push_back(line);
             }
         }
         
-        if (keepLine) {
-            lines.push_back(line);
+        if (!modelFound) {
+            std::cout << "Model '" << modelName << "' not found in blacklist for provider '" << provider << "'." << std::endl;
+            return;
         }
+        
+        // Write the updated blacklist back to the file
+        fileManager.writeAllLines(filteredLines);
+        std::cout << "Model '" << modelName << "' removed from blacklist for provider '" << provider << "'." << std::endl;
+        
+    } catch (const std::runtime_error& e) {
+        std::cerr << "Error: Could not remove model from blacklist - " << e.what() << std::endl;
     }
-    
-    blacklistFile.close();
-    
-    if (!modelFound) {
-        std::cout << "Model '" << modelName << "' not found in blacklist for provider '" << provider << "'." << std::endl;
-        return;
-    }
-    
-    // Write the updated blacklist back to the file
-    std::ofstream outFile(blacklistPath);
-    if (!outFile.is_open()) {
-        std::cerr << "Error: Could not open blacklist file for writing" << std::endl;
-        return;
-    }
-    
-    for (const auto &l : lines) {
-        outFile << l << std::endl;
-    }
-    
-    outFile.close();
-    
-    std::cout << "Model '" << modelName << "' removed from blacklist for provider '" << provider << "'." << std::endl;
 }
 
 /**
@@ -148,64 +135,55 @@ void ModelBlacklist::removeModelFromBlacklist(const std::string &provider, const
  */
 std::vector<BlacklistEntry> ModelBlacklist::getBlacklistedModels() {
     std::vector<BlacklistEntry> blacklistedModels;
+    BlacklistFileManager& fileManager = getFileManager();
     
-    std::string blacklistPath = getBlacklistPath();
-    
-    if (!std::filesystem::exists(blacklistPath)) {
+    if (!fileManager.exists()) {
         return blacklistedModels; // Empty vector
     }
     
-    std::ifstream blacklistFile(blacklistPath);
-    if (!blacklistFile.is_open()) {
-        return blacklistedModels; // Empty vector
-    }
-    
-    std::string line;
-    while (std::getline(blacklistFile, line)) {
-        // Skip empty lines and comments
-        if (line.empty() || line[0] == '#') {
-            continue;
-        }
+    try {
+        std::vector<std::string> lines = fileManager.readAllLines();
         
-        // Extract comment and timestamp if present
-        std::string timestamp;
-        size_t commentPos = line.find('#');
-        if (commentPos != std::string::npos) {
-            std::string commentPart = line.substr(commentPos + 1);
-            timestamp = extractTimestamp(commentPart);
-            // Remove comment part from line for parsing
-            line = line.substr(0, commentPos);
-        }
-        
-        // Parse the line
-        std::vector<std::string> parts = parseBlacklistLine(line);
-        
-        // Create BlacklistEntry if we have at least provider and model
-        if (parts.size() >= 2) {
-            BlacklistEntry entry;
-            entry.provider = parts[0];
-            entry.model = parts[1];
-            
-            // Add reason if present
-            if (parts.size() >= 3) {
-                entry.reason = parts[2];
+        for (std::string line : lines) {
+            // Skip empty lines and comments
+            if (line.empty() || line[0] == '#') {
+                continue;
             }
             
-            entry.timestamp = timestamp;
+            // Extract comment and timestamp if present
+            std::string timestamp;
+            size_t commentPos = line.find('#');
+            if (commentPos != std::string::npos) {
+                std::string commentPart = line.substr(commentPos + 1);
+                timestamp = extractTimestamp(commentPart);
+                // Remove comment part from line for parsing
+                line = line.substr(0, commentPos);
+            }
             
-            blacklistedModels.push_back(entry);
+            // Parse the line
+            std::vector<std::string> parts = parseBlacklistLine(line);
+            
+            // Create BlacklistEntry if we have at least provider and model
+            if (parts.size() >= 2) {
+                BlacklistEntry entry;
+                entry.provider = parts[0];
+                entry.model = parts[1];
+                
+                // Add reason if present
+                if (parts.size() >= 3) {
+                    entry.reason = parts[2];
+                }
+                
+                entry.timestamp = timestamp;
+                
+                blacklistedModels.push_back(entry);
+            }
         }
+    } catch (const std::runtime_error& e) {
+        std::cerr << "Error reading blacklist file: " << e.what() << std::endl;
     }
     
     return blacklistedModels;
-}
-
-/**
- * Gets the path to the blacklist file (~/.config/aith/blacklist).
- */
-std::string ModelBlacklist::getBlacklistPath() {
-    std::string home = SystemUtils::getEnvVar("HOME");
-    return home + "/.config/aith/blacklist";
 }
 
 /**
@@ -261,16 +239,4 @@ std::string ModelBlacklist::getCurrentTimestamp() {
         timestamp.pop_back();
     }
     return timestamp;
-}
-
-/**
- * Ensures the config directory exists and creates it if necessary.
- */
-void ModelBlacklist::ensureConfigDirectoryExists() {
-    std::string home = SystemUtils::getEnvVar("HOME");
-    std::string configDir = home + "/.config/aith";
-    
-    if (!std::filesystem::exists(configDir)) {
-        std::filesystem::create_directories(configDir);
-    }
 }
