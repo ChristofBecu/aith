@@ -3,6 +3,7 @@
 #include "provider_manager.h"
 #include "model_blacklist.h"
 #include "config_manager.h"
+#include "http_client.h"
 #include <json/json.h>
 #include <iostream>
 #include <fstream>
@@ -28,8 +29,7 @@ void listModels(const std::string &apiKey) {
     
     std::cout << "Fetching models from " << provider << " API..." << std::endl;
     
-    std::string command = "curl -s -X GET " + apiUrl + "/models -H 'Authorization: Bearer " + apiKey + "'";
-    std::string result = SystemUtils::exec(command.c_str());
+    std::string result = HttpClient::get(apiUrl + "/models", apiKey);
 
     Json::Value data;
     Json::CharReaderBuilder reader;
@@ -148,21 +148,10 @@ void chat(const std::string &prompt, const std::string &model, const std::string
     payload["model"] = selectedModel;
     payload["messages"] = history;
 
-    // Convert payload to JSON string
-    Json::StreamWriterBuilder writer;
-    std::string payloadJson = Json::writeString(writer, payload);
-
-    // Save payload to temp file
-    std::string tempFile = "/tmp/payload.json";
-    std::ofstream outFile(tempFile);
-    outFile << payloadJson;
-    outFile.close();
-
     std::cout << "Sending request to " << provider << " using model " << selectedModel << "..." << std::endl;
     
     // Send request to API
-    std::string command = "curl -s -X POST " + apiUrl + "/chat/completions -H 'Authorization: Bearer " + apiKey + "' -H 'Content-Type: application/json' -d @" + tempFile;
-    std::string response = SystemUtils::exec(command.c_str());
+    std::string response = HttpClient::post(apiUrl + "/chat/completions", apiKey, payload);
 
     // Parse response
     Json::Value data;
