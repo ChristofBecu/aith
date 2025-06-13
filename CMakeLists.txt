@@ -58,6 +58,7 @@ set(COMMANDS_SOURCES
     src/commands/list_command.cpp
     src/commands/history_command.cpp
     src/commands/chat_command.cpp
+    src/commands/benchmark_command.cpp
 )
 
 set(ALL_SOURCES

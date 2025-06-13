@@ -58,17 +58,13 @@ int main(int argc, char *argv[]) {
             return 1;
         }
     } else if (command == "test") {
-        // Handle benchmark testing
-        std::string testPrompt = "Hello";
-        
-        // Check if custom test prompt was provided
-        if (args.size() > 1) {
-            testPrompt = args[1];
+        try {
+            auto cmd = CommandFactory::createCommand(command, args, config);
+            cmd->execute();
+        } catch (const std::exception& e) {
+            std::cerr << "Error: " << e.what() << std::endl;
+            return 1;
         }
-        
-        std::cout << "Starting model benchmark tests..." << std::endl;
-        auto results = runAllModelsBenchmark(config.apiKey, testPrompt);
-        displayBenchmarkResults(results);
     } else if (command == "blacklist") {
         // Handle blacklist commands
         if (args.size() < 2) {

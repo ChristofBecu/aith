@@ -2,6 +2,7 @@
 #include "list_command.h"
 #include "history_command.h"
 #include "chat_command.h"
+#include "benchmark_command.h"
 #include <stdexcept>
 #include <algorithm>
 #include <iostream>
@@ -51,7 +52,7 @@ std::unique_ptr<Command> CommandFactory::createCommand(
             config.historyDir
         );
     } else if (commandName == "test" || commandName == "benchmark") {
-        throw std::runtime_error("BenchmarkCommand implementation not yet available - Phase 9");
+        return std::make_unique<BenchmarkCommand>(commandArgs, config);
     } else if (commandName == "blacklist") {
         throw std::runtime_error("BlacklistCommand implementation not yet available - Phase 10");
     } else if (commandName == "new") {
