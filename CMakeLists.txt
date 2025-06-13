@@ -7,35 +7,60 @@ project(aith)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-# Add include directory
+# Include directories
 include_directories(include)
+include_directories(include/core)
+include_directories(include/http)
+include_directories(include/benchmark)
+include_directories(include/chat)
+include_directories(include/utils)
 
-# Add source files
-set(SOURCES
+# Source files organized by domain
+set(CORE_SOURCES
+    src/core/api.cpp
+    src/core/config_manager.cpp
+    src/core/provider_manager.cpp
+    src/core/model_blacklist.cpp
+)
+
+set(HTTP_SOURCES
+    src/http/http_client.cpp
+    src/http/api_models.cpp
+    src/http/api_helpers.cpp
+)
+
+set(BENCHMARK_SOURCES
+    src/benchmark/benchmark.cpp
+    src/benchmark/benchmark_config.cpp
+    src/benchmark/benchmark_request.cpp
+    src/benchmark/benchmark_response.cpp
+    src/benchmark/benchmark_reporter.cpp
+    src/benchmark/benchmark_runner.cpp
+    src/benchmark/performance_timer.cpp
+)
+
+set(CHAT_SOURCES
+    src/chat/history.cpp
+    src/chat/markdown.cpp
+)
+
+set(UTILS_SOURCES
+    src/utils/system_utils.cpp
+    src/utils/string_utils.cpp
+    src/utils/file_utils.cpp
+)
+
+set(ALL_SOURCES
     src/main.cpp
-    src/system_utils.cpp
-    src/string_utils.cpp
-    src/file_utils.cpp
-    src/config_manager.cpp
-    src/provider_manager.cpp
-    src/model_blacklist.cpp
-    src/api.cpp
-    src/history.cpp
-    src/markdown.cpp
-    src/benchmark.cpp
-    src/benchmark_config.cpp
-    src/benchmark_request.cpp
-    src/benchmark_response.cpp
-    src/performance_timer.cpp
-    src/benchmark_reporter.cpp
-    src/benchmark_runner.cpp
-    src/http_client.cpp
-    src/api_models.cpp
-    src/api_helpers.cpp
+    ${CORE_SOURCES}
+    ${HTTP_SOURCES}
+    ${BENCHMARK_SOURCES}
+    ${CHAT_SOURCES}
+    ${UTILS_SOURCES}
 )
 
 # Add executable
-add_executable(aith ${SOURCES})
+add_executable(aith ${ALL_SOURCES})
 
 # Find and link libraries
 find_package(CURL REQUIRED)
