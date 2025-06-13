@@ -5,6 +5,7 @@
 #include <vector>
 #include <chrono>
 #include "benchmark_config.h"
+#include "performance_timer.h"
 
 /**
  * Structure to store benchmark result for a single model

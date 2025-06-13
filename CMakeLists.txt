@@ -24,6 +24,9 @@ set(SOURCES
     src/markdown.cpp
     src/benchmark.cpp
     src/benchmark_config.cpp
+    src/benchmark_request.cpp
+    src/benchmark_response.cpp
+    src/performance_timer.cpp
     src/http_client.cpp
     src/api_models.cpp
     src/api_helpers.cpp

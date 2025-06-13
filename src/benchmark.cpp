@@ -1,14 +1,15 @@
 #include "benchmark.h"
 #include "benchmark_config.h"
+#include "benchmark_request.h"
+#include "benchmark_response.h"
+#include "performance_timer.h"
 #include "system_utils.h"
 #include "string_utils.h"
 #include "file_utils.h"
 #include "provider_manager.h"
 #include "model_blacklist.h"
 #include "api.h"
-#include <json/json.h>
 #include <iostream>
-#include <sstream>
 #include <algorithm>
 #include <iomanip>
 
@@ -37,61 +38,50 @@ BenchmarkResult runModelBenchmark(const std::string &provider, const std::string
     std::string sanitizedModelName = StringUtils::sanitizeForFilename(model);
     std::string tempHistory = FileUtils::createTempJsonFile("[]", "benchmark_history_" + sanitizedModelName);
 
-    // Build the request payload
-    Json::Value payload;
-    payload["model"] = model;
+    // Create benchmark request
+    BenchmarkRequest request(model, actualTestPrompt, BenchmarkConfig::getMaxTokens());
     
-    Json::Value messages(Json::arrayValue);
-    Json::Value userMessage;
-    userMessage["role"] = "user";
-    userMessage["content"] = actualTestPrompt;
-    messages.append(userMessage);
-    payload["messages"] = messages;
-
-    // Set a reasonable max_tokens to avoid very long responses
-    payload["max_tokens"] = BenchmarkConfig::getMaxTokens();
-
-    Json::StreamWriterBuilder writer;
-    writer["indentation"] = "";
-    std::string payloadJson = Json::writeString(writer, payload);
-
-    // Save payload to temp file
-    std::string tempFile = FileUtils::createTempJsonFile(payloadJson, "benchmark_payload_" + sanitizedModelName);
+    // Validate request
+    if (!request.isValid()) {
+        result.errorMessage = "Invalid request: " + request.getValidationError();
+        FileUtils::removeFile(tempHistory);
+        return result;
+    }
+    
+    // Create temporary file with request payload
+    std::string tempFile = request.createTempFile(sanitizedModelName);
 
     std::cout << "Testing " << model << "... " << std::flush;
 
-    // Record start time
-    auto startTime = std::chrono::high_resolution_clock::now();
+    // Create performance timer and start measuring
+    PerformanceTimer timer;
+    timer.start();
 
     // Send request to API
     std::string command = "curl -s -X POST " + apiUrl + "/chat/completions -H 'Authorization: Bearer " + apiKey + "' -H 'Content-Type: application/json' -d @" + tempFile;
     std::string response = SystemUtils::exec(command.c_str());
 
-    // Record end time
-    auto endTime = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
-    result.responseTimeMs = duration.count();
+    // Stop timer and record duration
+    result.responseTimeMs = timer.stop();
 
-    // Parse response to check if it was successful
-    Json::Value data;
-    Json::CharReaderBuilder reader;
-    std::string errs;
-    std::istringstream s(response);
+    // Parse and analyze response
+    BenchmarkResponse benchmarkResponse(response);
     
-    if (!Json::parseFromStream(reader, s, &data, &errs)) {
-        result.errorMessage = "Failed to parse JSON response";
-        std::cout << "✗ (JSON parse error)" << std::endl;
-    } else if (!data.isMember("choices") || !data["choices"][0].isMember("message")) {
-        result.errorMessage = "Invalid API response format";
-        // Auto-blacklist models that don't support chat completions
-        ModelBlacklist::addModelToBlacklist(provider, model, "Auto-blacklisted: Invalid API response format");
-        std::cout << "✗ (Invalid response - auto-blacklisted)" << std::endl;
-    } else if (data.isMember("error")) {
-        result.errorMessage = data["error"]["message"].asString();
-        std::cout << "✗ (" << result.errorMessage << ")" << std::endl;
-    } else {
+    if (benchmarkResponse.isSuccessful()) {
         result.success = true;
         std::cout << "✓ (" << result.responseTimeMs << "ms)" << std::endl;
+    } else {
+        result.errorMessage = benchmarkResponse.getErrorMessage();
+        
+        // Auto-blacklist models that don't support chat completions
+        if (benchmarkResponse.shouldBlacklist()) {
+            ModelBlacklist::addModelToBlacklist(provider, model, benchmarkResponse.getBlacklistReason());
+            std::cout << "✗ (Invalid response - auto-blacklisted)" << std::endl;
+        } else if (!benchmarkResponse.isParseable()) {
+            std::cout << "✗ (JSON parse error)" << std::endl;
+        } else {
+            std::cout << "✗ (" << result.errorMessage << ")" << std::endl;
+        }
     }
 
     // Clean up temporary files
