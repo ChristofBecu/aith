@@ -49,22 +49,17 @@ bool ModelBlacklist::isModelBlacklisted(const std::string &provider, const std::
  */
 void ModelBlacklist::addModelToBlacklist(const std::string &provider, const std::string &modelName, 
                                         const std::string &reason) {
-    if (ModelBlacklist::isModelBlacklisted(provider, modelName)) {
-        // Model already blacklisted for this provider, no need to add it again
-        std::cout << "Model '" << modelName << "' already blacklisted for provider '" << provider << "'." << std::endl;
-        return;
-    }
-    
-    BlacklistFileManager& fileManager = getFileManager();
-    
-    // Create the entry line using BlacklistParser
-    std::string entryLine = BlacklistParser::formatEntry(provider, modelName, reason);
-    
     try {
-        fileManager.appendLine(entryLine);
-        std::cout << "Model '" << modelName << "' added to blacklist for provider '" << provider << "'." << std::endl;
-    } catch (const std::runtime_error& e) {
-        std::cerr << "Error: Could not add model to blacklist - " << e.what() << std::endl;
+        // Use the factory to create a BlacklistAddOperation
+        auto addOperation = BlacklistOperationFactory::createOperation(
+            BlacklistOperationFactory::OperationType::ADD, provider, modelName, reason);
+        
+        // Execute the add operation
+        addOperation->execute();
+        
+    } catch (const std::exception& e) {
+        // Log error but don't crash - add operation should handle most errors internally
+        std::cerr << "Error in addModelToBlacklist: " << e.what() << std::endl;
     }
 }
 
