@@ -4,8 +4,9 @@
 #include <vector>
 #include <memory>
 
-// Forward declaration
+// Forward declarations
 class BlacklistFileManager;
+class BlacklistParser;
 
 /**
  * @brief Structure representing a blacklisted model entry.
@@ -62,31 +63,4 @@ private:
      * @return Reference to the BlacklistFileManager instance
      */
     static BlacklistFileManager& getFileManager();
-    
-    /**
-     * Parses a blacklist line into provider, model, and reason components.
-     * @param line The line to parse (pipe-separated format)
-     * @return Vector containing [provider, model, reason] (reason may be empty)
-     */
-    static std::vector<std::string> parseBlacklistLine(const std::string &line);
-    
-    /**
-     * Trims whitespace from the beginning and end of a string.
-     * @param str The string to trim
-     * @return The trimmed string
-     */
-    static std::string trimWhitespace(const std::string &str);
-    
-    /**
-     * Extracts timestamp from a comment line.
-     * @param commentPart The comment portion of a blacklist line
-     * @return The extracted timestamp or empty string if not found
-     */
-    static std::string extractTimestamp(const std::string &commentPart);
-    
-    /**
-     * Generates a current timestamp string.
-     * @return Current date and time as a string
-     */
-    static std::string getCurrentTimestamp();
 };

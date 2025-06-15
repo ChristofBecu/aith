@@ -1,5 +1,6 @@
 #include "model_blacklist.h"
 #include "blacklist_file_manager.h"
+#include "blacklist_parser.h"
 #include <iostream>
 #include <sstream>
 #include <ctime>
@@ -28,15 +29,15 @@ bool ModelBlacklist::isModelBlacklisted(const std::string &provider, const std::
         
         for (const std::string& line : lines) {
             // Skip empty lines and comments
-            if (line.empty() || line[0] == '#') {
+            if (BlacklistParser::isEmptyLine(line) || BlacklistParser::isCommentLine(line)) {
                 continue;
             }
             
             // Parse the line
-            std::vector<std::string> parts = parseBlacklistLine(line);
+            ParsedBlacklistEntry entry = BlacklistParser::parseLine(line);
             
-            // Check if we have at least provider and model and they match
-            if (parts.size() >= 2 && parts[0] == provider && parts[1] == modelName) {
+            // Check if we have a valid entry and it matches
+            if (entry.isValid && entry.provider == provider && entry.model == modelName) {
                 return true;
             }
         }
@@ -61,15 +62,8 @@ void ModelBlacklist::addModelToBlacklist(const std::string &provider, const std:
     
     BlacklistFileManager& fileManager = getFileManager();
     
-    // Get current timestamp
-    std::string timestamp = getCurrentTimestamp();
-    
-    // Create the entry line in pipe-separated format
-    std::string entryLine = provider + " | " + modelName + " | ";
-    if (!reason.empty()) {
-        entryLine += reason;
-    }
-    entryLine += " # Added on " + timestamp;
+    // Create the entry line using BlacklistParser
+    std::string entryLine = BlacklistParser::formatEntry(provider, modelName, reason);
     
     try {
         fileManager.appendLine(entryLine);
@@ -99,13 +93,13 @@ void ModelBlacklist::removeModelFromBlacklist(const std::string &provider, const
         for (const std::string& line : lines) {
             bool keepLine = true;
             
-            // Skip empty lines and comments
-            if (!line.empty() && line[0] != '#') {
-                // Parse the line
-                std::vector<std::string> parts = parseBlacklistLine(line);
+            // Skip empty lines and comments, but keep them in the file
+            if (!BlacklistParser::isEmptyLine(line) && !BlacklistParser::isCommentLine(line)) {
+                // Parse the line  
+                ParsedBlacklistEntry entry = BlacklistParser::parseLine(line);
                 
-                // Check if we have at least provider and model and they match
-                if (parts.size() >= 2 && parts[0] == provider && parts[1] == modelName) {
+                // Check if we have a valid entry and it matches
+                if (entry.isValid && entry.provider == provider && entry.model == modelName) {
                     keepLine = false;
                     modelFound = true;
                 }
@@ -144,37 +138,17 @@ std::vector<BlacklistEntry> ModelBlacklist::getBlacklistedModels() {
     try {
         std::vector<std::string> lines = fileManager.readAllLines();
         
-        for (std::string line : lines) {
-            // Skip empty lines and comments
-            if (line.empty() || line[0] == '#') {
-                continue;
-            }
+        for (const std::string& line : lines) {
+            // Parse the line using BlacklistParser
+            ParsedBlacklistEntry parsedEntry = BlacklistParser::parseLine(line);
             
-            // Extract comment and timestamp if present
-            std::string timestamp;
-            size_t commentPos = line.find('#');
-            if (commentPos != std::string::npos) {
-                std::string commentPart = line.substr(commentPos + 1);
-                timestamp = extractTimestamp(commentPart);
-                // Remove comment part from line for parsing
-                line = line.substr(0, commentPos);
-            }
-            
-            // Parse the line
-            std::vector<std::string> parts = parseBlacklistLine(line);
-            
-            // Create BlacklistEntry if we have at least provider and model
-            if (parts.size() >= 2) {
+            // Create BlacklistEntry if we have a valid parsed entry
+            if (parsedEntry.isValid) {
                 BlacklistEntry entry;
-                entry.provider = parts[0];
-                entry.model = parts[1];
-                
-                // Add reason if present
-                if (parts.size() >= 3) {
-                    entry.reason = parts[2];
-                }
-                
-                entry.timestamp = timestamp;
+                entry.provider = parsedEntry.provider;
+                entry.model = parsedEntry.model;
+                entry.reason = parsedEntry.reason;
+                entry.timestamp = parsedEntry.timestamp;
                 
                 blacklistedModels.push_back(entry);
             }
@@ -184,59 +158,4 @@ std::vector<BlacklistEntry> ModelBlacklist::getBlacklistedModels() {
     }
     
     return blacklistedModels;
-}
-
-/**
- * Parses a blacklist line into provider, model, and reason components.
- */
-std::vector<std::string> ModelBlacklist::parseBlacklistLine(const std::string &line) {
-    std::vector<std::string> parts;
-    std::stringstream ss(line);
-    std::string part;
-    
-    while (std::getline(ss, part, '|')) {
-        // Trim whitespace
-        part = trimWhitespace(part);
-        parts.push_back(part);
-    }
-    
-    return parts;
-}
-
-/**
- * Trims whitespace from the beginning and end of a string.
- */
-std::string ModelBlacklist::trimWhitespace(const std::string &str) {
-    size_t start = str.find_first_not_of(" \t");
-    if (start == std::string::npos) {
-        return "";
-    }
-    
-    size_t end = str.find_last_not_of(" \t");
-    return str.substr(start, end - start + 1);
-}
-
-/**
- * Extracts timestamp from a comment line.
- */
-std::string ModelBlacklist::extractTimestamp(const std::string &commentPart) {
-    size_t addedOnPos = commentPart.find("Added on ");
-    if (addedOnPos != std::string::npos) {
-        std::string timestamp = commentPart.substr(addedOnPos + 9); // "Added on " is 9 chars
-        return trimWhitespace(timestamp);
-    }
-    return "";
-}
-
-/**
- * Generates a current timestamp string.
- */
-std::string ModelBlacklist::getCurrentTimestamp() {
-    std::time_t now = std::time(nullptr);
-    std::string timestamp = std::ctime(&now);
-    // Remove the newline character from ctime output
-    if (!timestamp.empty() && timestamp.back() == '\n') {
-        timestamp.pop_back();
-    }
-    return timestamp;
 }
