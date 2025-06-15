@@ -1,9 +1,9 @@
 #include "model_blacklist.h"
 #include "blacklist_file_manager.h"
 #include "blacklist_parser.h"
+#include "blacklist_operation_factory.h"
+#include "blacklist_check_operation.h"
 #include <iostream>
-#include <sstream>
-#include <ctime>
 #include <algorithm>
 
 /**
@@ -18,35 +18,30 @@ BlacklistFileManager& ModelBlacklist::getFileManager() {
  * Checks if a model is blacklisted for a specific provider.
  */
 bool ModelBlacklist::isModelBlacklisted(const std::string &provider, const std::string &modelName) {
-    BlacklistFileManager& fileManager = getFileManager();
-    
-    if (!fileManager.exists()) {
-        return false;
-    }
-    
     try {
-        std::vector<std::string> lines = fileManager.readAllLines();
+        // Use the factory to create a BlacklistCheckOperation
+        auto checkOperation = BlacklistOperationFactory::createOperation(
+            BlacklistOperationFactory::OperationType::CHECK, provider, modelName);
         
-        for (const std::string& line : lines) {
-            // Skip empty lines and comments
-            if (BlacklistParser::isEmptyLine(line) || BlacklistParser::isCommentLine(line)) {
-                continue;
-            }
-            
-            // Parse the line
-            ParsedBlacklistEntry entry = BlacklistParser::parseLine(line);
-            
-            // Check if we have a valid entry and it matches
-            if (entry.isValid && entry.provider == provider && entry.model == modelName) {
-                return true;
-            }
+        // Execute the check
+        checkOperation->execute();
+        
+        // Cast to BlacklistCheckOperation to get the result
+        auto* checkOp = dynamic_cast<BlacklistCheckOperation*>(checkOperation.get());
+        if (checkOp) {
+            return checkOp->isBlacklisted();
         }
-    } catch (const std::runtime_error& e) {
-        std::cerr << "Error reading blacklist file: " << e.what() << std::endl;
+        
+        // Fallback - should not happen in normal operation
+        std::cerr << "Warning: Failed to cast to BlacklistCheckOperation" << std::endl;
+        return false;
+        
+    } catch (const std::exception& e) {
+        // Log error but don't crash - blacklist check should be resilient
+        std::cerr << "Error checking blacklist for " << provider << "/" << modelName 
+                  << ": " << e.what() << std::endl;
         return false;
     }
-    
-    return false;
 }
 
 /**

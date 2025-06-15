@@ -26,6 +26,7 @@ set(CORE_SOURCES
     src/core/blacklist_parser.cpp
     src/core/blacklist_operation.cpp
     src/core/blacklist_operation_factory.cpp
+    src/core/blacklist_check_operation.cpp
     src/core/application_setup.cpp
     src/core/application_controller.cpp
 )

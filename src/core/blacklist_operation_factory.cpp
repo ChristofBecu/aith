@@ -1,5 +1,6 @@
 #include "blacklist_operation_factory.h"
 #include "blacklist_operation.h"
+#include "blacklist_check_operation.h"
 #include "blacklist_file_manager.h"
 #include "blacklist_parser.h"
 #include <stdexcept>
@@ -178,8 +179,8 @@ std::unique_ptr<BlacklistOperation> BlacklistOperationFactory::createConcreteOpe
     
     switch (type) {
         case OperationType::CHECK:
-            // TODO: Implement in Phase 5
-            throw std::runtime_error("BlacklistCheckOperation not yet implemented - will be added in Phase 5");
+            // Create and return BlacklistCheckOperation
+            return std::make_unique<BlacklistCheckOperation>(provider, model, fileManager, parser);
             
         case OperationType::ADD:
             // TODO: Implement in Phase 6
