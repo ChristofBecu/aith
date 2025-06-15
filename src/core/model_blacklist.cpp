@@ -67,50 +67,17 @@ void ModelBlacklist::addModelToBlacklist(const std::string &provider, const std:
  * Removes a model from the blacklist for a specific provider.
  */
 void ModelBlacklist::removeModelFromBlacklist(const std::string &provider, const std::string &modelName) {
-    BlacklistFileManager& fileManager = getFileManager();
-    
-    if (!fileManager.exists()) {
-        std::cout << "Blacklist file does not exist." << std::endl;
-        return;
-    }
-    
     try {
-        // Read the entire blacklist file
-        std::vector<std::string> lines = fileManager.readAllLines();
-        std::vector<std::string> filteredLines;
-        bool modelFound = false;
+        // Use the factory to create a BlacklistRemoveOperation
+        auto removeOperation = BlacklistOperationFactory::createOperation(
+            BlacklistOperationFactory::OperationType::REMOVE, provider, modelName);
         
-        for (const std::string& line : lines) {
-            bool keepLine = true;
-            
-            // Skip empty lines and comments, but keep them in the file
-            if (!BlacklistParser::isEmptyLine(line) && !BlacklistParser::isCommentLine(line)) {
-                // Parse the line  
-                ParsedBlacklistEntry entry = BlacklistParser::parseLine(line);
-                
-                // Check if we have a valid entry and it matches
-                if (entry.isValid && entry.provider == provider && entry.model == modelName) {
-                    keepLine = false;
-                    modelFound = true;
-                }
-            }
-            
-            if (keepLine) {
-                filteredLines.push_back(line);
-            }
-        }
+        // Execute the remove operation
+        removeOperation->execute();
         
-        if (!modelFound) {
-            std::cout << "Model '" << modelName << "' not found in blacklist for provider '" << provider << "'." << std::endl;
-            return;
-        }
-        
-        // Write the updated blacklist back to the file
-        fileManager.writeAllLines(filteredLines);
-        std::cout << "Model '" << modelName << "' removed from blacklist for provider '" << provider << "'." << std::endl;
-        
-    } catch (const std::runtime_error& e) {
-        std::cerr << "Error: Could not remove model from blacklist - " << e.what() << std::endl;
+    } catch (const std::exception& e) {
+        // Log error but don't crash - remove operation should handle most errors internally
+        std::cerr << "Error in removeModelFromBlacklist: " << e.what() << std::endl;
     }
 }
 

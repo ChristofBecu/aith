@@ -29,6 +29,7 @@ set(CORE_SOURCES
     src/core/blacklist/blacklist_operation_factory.cpp
     src/core/blacklist/blacklist_check_operation.cpp
     src/core/blacklist/blacklist_add_operation.cpp
+    src/core/blacklist/blacklist_remove_operation.cpp
     src/core/application_setup.cpp
     src/core/application_controller.cpp
 )
