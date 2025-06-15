@@ -1,8 +1,8 @@
 #include "model_blacklist.h"
-#include "blacklist_file_manager.h"
-#include "blacklist_parser.h"
-#include "blacklist_operation_factory.h"
-#include "blacklist_check_operation.h"
+#include "blacklist/blacklist_file_manager.h"
+#include "blacklist/blacklist_parser.h"
+#include "blacklist/blacklist_operation_factory.h"
+#include "blacklist/blacklist_check_operation.h"
 #include <iostream>
 #include <algorithm>
 

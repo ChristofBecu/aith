@@ -10,6 +10,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 # Include directories
 include_directories(include)
 include_directories(include/core)
+include_directories(include/core/blacklist)
 include_directories(include/http)
 include_directories(include/benchmark)
 include_directories(include/chat)
@@ -22,11 +23,11 @@ set(CORE_SOURCES
     src/core/config_manager.cpp
     src/core/provider_manager.cpp
     src/core/model_blacklist.cpp
-    src/core/blacklist_file_manager.cpp
-    src/core/blacklist_parser.cpp
-    src/core/blacklist_operation.cpp
-    src/core/blacklist_operation_factory.cpp
-    src/core/blacklist_check_operation.cpp
+    src/core/blacklist/blacklist_file_manager.cpp
+    src/core/blacklist/blacklist_parser.cpp
+    src/core/blacklist/blacklist_operation.cpp
+    src/core/blacklist/blacklist_operation_factory.cpp
+    src/core/blacklist/blacklist_check_operation.cpp
     src/core/application_setup.cpp
     src/core/application_controller.cpp
 )
