@@ -24,6 +24,7 @@ set(CORE_SOURCES
     src/core/model_blacklist.cpp
     src/core/blacklist_file_manager.cpp
     src/core/blacklist_parser.cpp
+    src/core/blacklist_operation.cpp
     src/core/application_setup.cpp
     src/core/application_controller.cpp
 )
