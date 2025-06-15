@@ -10,8 +10,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 # Include directories
 include_directories(include)
 include_directories(include/core)
-include_directories(include/core/blacklist)
+include_directories(include/blacklist)
 include_directories(include/http)
+include_directories(include/api)
 include_directories(include/benchmark)
 include_directories(include/chat)
 include_directories(include/utils)
@@ -19,26 +20,32 @@ include_directories(include/commands)
 
 # Source files organized by domain
 set(CORE_SOURCES
-    src/core/api.cpp
+    src/core/api_manager.cpp
     src/core/config_manager.cpp
     src/core/provider_manager.cpp
-    src/core/model_blacklist.cpp
-    src/core/blacklist/blacklist_file_manager.cpp
-    src/core/blacklist/blacklist_parser.cpp
-    src/core/blacklist/blacklist_operation.cpp
-    src/core/blacklist/blacklist_operation_factory.cpp
-    src/core/blacklist/blacklist_check_operation.cpp
-    src/core/blacklist/blacklist_add_operation.cpp
-    src/core/blacklist/blacklist_remove_operation.cpp
-    src/core/blacklist/blacklist_list_operation.cpp
+    src/core/blacklist_manager.cpp
     src/core/application_setup.cpp
     src/core/application_controller.cpp
 )
 
+set(BLACKLIST_SOURCES
+    src/blacklist/blacklist_file_manager.cpp
+    src/blacklist/blacklist_parser.cpp
+    src/blacklist/blacklist_operation.cpp
+    src/blacklist/blacklist_operation_factory.cpp
+    src/blacklist/blacklist_check_operation.cpp
+    src/blacklist/blacklist_add_operation.cpp
+    src/blacklist/blacklist_remove_operation.cpp
+    src/blacklist/blacklist_list_operation.cpp
+)
+
 set(HTTP_SOURCES
     src/http/http_client.cpp
-    src/http/api_models.cpp
-    src/http/api_helpers.cpp
+)
+
+set(API_SOURCES
+    src/api/api_models.cpp
+    src/api/api_helpers.cpp
 )
 
 set(BENCHMARK_SOURCES
@@ -75,7 +82,9 @@ set(COMMANDS_SOURCES
 set(ALL_SOURCES
     src/main.cpp
     ${CORE_SOURCES}
+    ${BLACKLIST_SOURCES}
     ${HTTP_SOURCES}
+    ${API_SOURCES}
     ${BENCHMARK_SOURCES}
     ${CHAT_SOURCES}
     ${UTILS_SOURCES}

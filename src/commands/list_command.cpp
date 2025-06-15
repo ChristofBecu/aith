@@ -1,6 +1,6 @@
 #include "commands/list_command.h"
 #include "core/provider_manager.h"
-#include "core/api.h"
+#include "core/api_manager.h"
 #include <iostream>
 #include <stdexcept>
 
@@ -26,7 +26,7 @@ void ListCommand::execute() {
     std::cout << "Available models for provider '" << ProviderManager::getAgent() << "':" << std::endl;
     
     // Use existing API infrastructure to list models
-    listModels(apiKey);
+    ApiManager::listModels(apiKey);
 }
 
 /**

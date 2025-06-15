@@ -1,5 +1,5 @@
-#include "commands/benchmark_command.h"
-#include "benchmark/benchmark.h"
+#include "benchmark_command.h"
+#include "benchmark.h"
 #include <iostream>
 #include <stdexcept>
 

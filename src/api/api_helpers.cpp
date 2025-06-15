@@ -1,5 +1,5 @@
 #include "api_helpers.h"
-#include "model_blacklist.h"
+#include "blacklist_manager.h"
 #include <iostream>
 
 /**
@@ -30,7 +30,7 @@ bool ApiValidator::validateProviderForChat(const std::string& provider, const st
         return false;
     }
     
-    if (ModelBlacklist::isModelBlacklisted(provider, selectedModel)) {
+    if (BlacklistManager::isModelBlacklisted(provider, selectedModel)) {
         std::cerr << "Error: The model '" << selectedModel << "' is blacklisted for provider '" << provider << "'." << std::endl;
         std::cerr << "Use 'aith blacklist list' to see blacklisted models, or 'aith blacklist remove " << provider << " " << selectedModel << "' to unblacklist it." << std::endl;
         return false;

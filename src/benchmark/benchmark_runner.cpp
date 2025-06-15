@@ -9,7 +9,7 @@
 #include "string_utils.h"
 #include "file_utils.h"
 #include "provider_manager.h"
-#include "model_blacklist.h"
+#include "blacklist_manager.h"
 #include "http_client.h"
 #include "api_models.h"
 #include <iostream>
@@ -156,7 +156,7 @@ std::vector<std::string> BenchmarkRunner::filterBlacklistedModels(
     blacklistedCount = 0;
     
     for (const std::string& model : allModels) {
-        if (ModelBlacklist::isModelBlacklisted(provider, model)) {
+        if (BlacklistManager::isModelBlacklisted(provider, model)) {
             blacklistedCount++;
         } else {
             modelsToTest.push_back(model);
@@ -230,7 +230,7 @@ BenchmarkResult BenchmarkRunner::executeModelRequest(const std::string& provider
         
         // Check if this error indicates the model should be blacklisted
         if (shouldBlacklistModel(chatResponse.getErrorMessage())) {
-            ModelBlacklist::addModelToBlacklist(provider, model, chatResponse.getErrorMessage());
+            BlacklistManager::addModelToBlacklist(provider, model, chatResponse.getErrorMessage());
         }
     } else {
         result.success = true;

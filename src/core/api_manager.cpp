@@ -1,11 +1,12 @@
-#include "api.h"
+#include "api_manager.h"
 #include "system_utils.h"
 #include "provider_manager.h"
-#include "model_blacklist.h"
+#include "blacklist_manager.h"
+#include "blacklist_manager.h"
 #include "config_manager.h"
 #include "http_client.h"
-#include "api_models.h"
-#include "api_helpers.h"
+#include "api/api_models.h"
+#include "api/api_helpers.h"
 #include <json/json.h>
 #include <iostream>
 #include <fstream>
@@ -19,7 +20,7 @@
  * Lists all available aith models.
  * @param apiKey The API key for authentication.
  */
-void listModels(const std::string &apiKey) {
+void ApiManager::listModels(const std::string &apiKey) {
     std::string apiUrl = ProviderManager::getApiUrl();
     std::string provider = ProviderManager::getAgent();
     
@@ -49,7 +50,7 @@ void listModels(const std::string &apiKey) {
  * @param currentHistory The path to the history file.
  * @param newChat Whether this is a new chat session.
  */
-void chat(const std::string &prompt, const std::string &model, const std::string &apiKey, const std::string &currentHistory, bool newChat) {
+void ApiManager::chat(const std::string &prompt, const std::string &model, const std::string &apiKey, const std::string &currentHistory, bool newChat) {
     std::string selectedModel = model.empty() ? ProviderManager::getDefaultModel() : model;
     std::string apiUrl = ProviderManager::getApiUrl();
     std::string provider = ProviderManager::getAgent();

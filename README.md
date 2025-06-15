@@ -10,7 +10,7 @@ This project is a lightweight C++ application for interacting with aith models i
 - **Markdown Rendering**: Render aith responses in Markdown format for better readability.
 - **Model Blacklisting**: Keep track of problematic models across different providers with automatic blacklisting.
 - **Performance Benchmarking**: Test and compare model response times with built-in benchmarking tools.
-- **Modular Architecture**: Clean separation of concerns with SystemUtils, ConfigManager, ProviderManager, and ModelBlacklist classes.
+- **Modular Architecture**: Clean separation of concerns with SystemUtils, ConfigManager, ProviderManager, BlacklistManager, and ApiManager classes.
 
 ## Prerequisites
 
@@ -265,8 +265,10 @@ The application follows a modular architecture with clear separation of concerns
 - **SystemUtils**: Handles system-level operations like environment variable access and command execution
 - **ConfigManager**: Manages configuration file reading and parsing with priority resolution
 - **ProviderManager**: Handles aith provider selection, API key management, and provider-specific settings
-- **ModelBlacklist**: Manages model blacklisting with automatic and manual blacklist operations
-- **API Module**: Handles HTTP requests and API communications
+- **BlacklistManager**: Manages model blacklisting with automatic and manual blacklist operations
+- **ApiManager**: Coordinates high-level API operations (models, chat) with other managers
+- **API Domain**: Contains API models, helpers, and validation logic separate from HTTP transport
+- **HTTP Module**: Handles low-level HTTP transport and communication
 - **History Module**: Manages chat history storage and retrieval
 - **Markdown Module**: Renders aith responses in formatted Markdown
 - **Benchmark Module**: Provides performance testing and model comparison functionality

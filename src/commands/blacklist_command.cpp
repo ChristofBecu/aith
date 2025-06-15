@@ -1,5 +1,5 @@
-#include "commands/blacklist_command.h"
-#include "core/model_blacklist.h"
+#include "blacklist_command.h"
+#include "blacklist_manager.h"
 #include <iostream>
 #include <stdexcept>
 
@@ -49,7 +49,7 @@ std::string BlacklistCommand::getCommandName() const {
 }
 
 void BlacklistCommand::executeListCommand() {
-    auto blacklistedModels = ModelBlacklist::getBlacklistedModels();
+    auto blacklistedModels = BlacklistManager::getBlacklistedModels();
     
     if (blacklistedModels.empty()) {
         std::cout << "No models are currently blacklisted." << std::endl;
@@ -78,14 +78,14 @@ void BlacklistCommand::executeAddCommand() {
         reason = buildReasonString(4);
     }
     
-    ModelBlacklist::addModelToBlacklist(provider, modelName, reason);
+    BlacklistManager::addModelToBlacklist(provider, modelName, reason);
 }
 
 void BlacklistCommand::executeRemoveCommand() {
     std::string provider = args_[2];
     std::string modelName = args_[3];
     
-    ModelBlacklist::removeModelFromBlacklist(provider, modelName);
+    BlacklistManager::removeModelFromBlacklist(provider, modelName);
 }
 
 std::string BlacklistCommand::getSubCommand() const {

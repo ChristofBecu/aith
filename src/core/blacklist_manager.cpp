@@ -1,16 +1,16 @@
-#include "model_blacklist.h"
-#include "blacklist/blacklist_file_manager.h"
-#include "blacklist/blacklist_parser.h"
-#include "blacklist/blacklist_operation_factory.h"
-#include "blacklist/blacklist_check_operation.h"
-#include "blacklist/blacklist_list_operation.h"
+#include "blacklist_manager.h"
+#include "blacklist_file_manager.h"
+#include "blacklist_parser.h"
+#include "blacklist_operation_factory.h"
+#include "blacklist_check_operation.h"
+#include "blacklist_list_operation.h"
 #include <iostream>
 #include <algorithm>
 
 /**
  * Checks if a model is blacklisted for a specific provider.
  */
-bool ModelBlacklist::isModelBlacklisted(const std::string &provider, const std::string &modelName) {
+bool BlacklistManager::isModelBlacklisted(const std::string &provider, const std::string &modelName) {
     try {
         // Use the factory to create a BlacklistCheckOperation
         auto checkOperation = BlacklistOperationFactory::createOperation(
@@ -40,7 +40,7 @@ bool ModelBlacklist::isModelBlacklisted(const std::string &provider, const std::
 /**
  * Adds a model to the blacklist for a specific provider.
  */
-void ModelBlacklist::addModelToBlacklist(const std::string &provider, const std::string &modelName, 
+void BlacklistManager::addModelToBlacklist(const std::string &provider, const std::string &modelName, 
                                         const std::string &reason) {
     try {
         // Use the factory to create a BlacklistAddOperation
@@ -59,7 +59,7 @@ void ModelBlacklist::addModelToBlacklist(const std::string &provider, const std:
 /**
  * Removes a model from the blacklist for a specific provider.
  */
-void ModelBlacklist::removeModelFromBlacklist(const std::string &provider, const std::string &modelName) {
+void BlacklistManager::removeModelFromBlacklist(const std::string &provider, const std::string &modelName) {
     try {
         // Use the factory to create a BlacklistRemoveOperation
         auto removeOperation = BlacklistOperationFactory::createOperation(
@@ -77,7 +77,7 @@ void ModelBlacklist::removeModelFromBlacklist(const std::string &provider, const
 /**
  * Returns a list of all blacklisted models and their information.
  */
-std::vector<BlacklistEntry> ModelBlacklist::getBlacklistedModels() {
+std::vector<BlacklistEntry> BlacklistManager::getBlacklistedModels() {
     try {
         // Use the factory to create a BlacklistListOperation
         auto listOperation = BlacklistOperationFactory::createOperation(

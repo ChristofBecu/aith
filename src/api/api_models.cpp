@@ -1,5 +1,5 @@
 #include "api_models.h"
-#include "model_blacklist.h"
+#include "blacklist_manager.h"
 #include <iostream>
 #include <sstream>
 #include <ctime>
@@ -159,7 +159,7 @@ ModelsListResponse::ModelsListResponse(const std::string& jsonResponse, const st
         }
         
         // Check if model is blacklisted
-        model.isBlacklisted = ModelBlacklist::isModelBlacklisted(provider, model.id);
+        model.isBlacklisted = BlacklistManager::isModelBlacklisted(provider, model.id);
         
         models.push_back(model);
     }

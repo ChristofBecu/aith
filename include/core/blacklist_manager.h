@@ -19,13 +19,13 @@ struct BlacklistEntry {
 };
 
 /**
- * @brief Model blacklist management for AITH application.
+ * @brief Blacklist management service for AITH application.
  * 
  * This class manages the blacklist of AI models that should not be used.
- * It handles reading from and writing to the blacklist file (~/.config/aith/blacklist)
- * with a pipe-separated format: provider | model | reason # Added on timestamp
+ * It provides a high-level interface for blacklist operations, delegating
+ * to specialized operation classes through the factory pattern.
  */
-class ModelBlacklist {
+class BlacklistManager {
 public:
     /**
      * Checks if a model is blacklisted for a specific provider.

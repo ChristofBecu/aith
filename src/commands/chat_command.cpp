@@ -1,5 +1,5 @@
-#include "commands/chat_command.h"
-#include "core/api.h"
+#include "chat_command.h"
+#include "api_manager.h"
 #include "chat/history.h"
 #include <iostream>
 #include <stdexcept>
@@ -65,10 +65,10 @@ std::string ChatCommand::getCommandName() const {
 }
 
 void ChatCommand::executeDirectChat(const std::string& prompt, const std::string& model) {
-    chat(prompt, model, config_.apiKey, config_.currentHistory, false);
+    ApiManager::chat(prompt, model, config_.apiKey, config_.currentHistory, false);
 }
 
 void ChatCommand::executeNewChat(const std::string& prompt, const std::string& model) {
     startNewHistory(prompt, config_.historyDir, config_.currentHistory);
-    chat(prompt, model, config_.apiKey, config_.currentHistory, true);
+    ApiManager::chat(prompt, model, config_.apiKey, config_.currentHistory, true);
 }

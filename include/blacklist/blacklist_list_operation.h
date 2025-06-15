@@ -1,7 +1,7 @@
 #pragma once
 
 #include "blacklist_operation.h"
-#include "../model_blacklist.h"  // For BlacklistEntry
+#include "core/blacklist_manager.h"  // For BlacklistEntry
 #include <vector>
 
 /**
