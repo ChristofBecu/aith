@@ -3,6 +3,7 @@
 #include "blacklist_check_operation.h"
 #include "blacklist_add_operation.h"
 #include "blacklist_remove_operation.h"
+#include "blacklist_list_operation.h"
 #include "blacklist_file_manager.h"
 #include "blacklist_parser.h"
 #include <stdexcept>
@@ -193,8 +194,8 @@ std::unique_ptr<BlacklistOperation> BlacklistOperationFactory::createConcreteOpe
             return std::make_unique<BlacklistRemoveOperation>(provider, model, fileManager, parser);
             
         case OperationType::LIST:
-            // TODO: Implement in Phase 8
-            throw std::runtime_error("BlacklistListOperation not yet implemented - will be added in Phase 8");
+            // Create and return BlacklistListOperation
+            return std::make_unique<BlacklistListOperation>(fileManager, parser);
             
         default:
             throw std::invalid_argument("Unknown operation type for creation");

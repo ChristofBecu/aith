@@ -56,11 +56,4 @@ public:
      * @return A vector of BlacklistEntry structures
      */
     static std::vector<BlacklistEntry> getBlacklistedModels();
-
-private:
-    /**
-     * Gets the file manager instance for blacklist operations.
-     * @return Reference to the BlacklistFileManager instance
-     */
-    static BlacklistFileManager& getFileManager();
 };

@@ -3,16 +3,9 @@
 #include "blacklist/blacklist_parser.h"
 #include "blacklist/blacklist_operation_factory.h"
 #include "blacklist/blacklist_check_operation.h"
+#include "blacklist/blacklist_list_operation.h"
 #include <iostream>
 #include <algorithm>
-
-/**
- * Gets the file manager instance for blacklist operations.
- */
-BlacklistFileManager& ModelBlacklist::getFileManager() {
-    static BlacklistFileManager instance;
-    return instance;
-}
 
 /**
  * Checks if a model is blacklisted for a specific provider.
@@ -85,34 +78,27 @@ void ModelBlacklist::removeModelFromBlacklist(const std::string &provider, const
  * Returns a list of all blacklisted models and their information.
  */
 std::vector<BlacklistEntry> ModelBlacklist::getBlacklistedModels() {
-    std::vector<BlacklistEntry> blacklistedModels;
-    BlacklistFileManager& fileManager = getFileManager();
-    
-    if (!fileManager.exists()) {
-        return blacklistedModels; // Empty vector
-    }
-    
     try {
-        std::vector<std::string> lines = fileManager.readAllLines();
+        // Use the factory to create a BlacklistListOperation
+        auto listOperation = BlacklistOperationFactory::createOperation(
+            BlacklistOperationFactory::OperationType::LIST);
         
-        for (const std::string& line : lines) {
-            // Parse the line using BlacklistParser
-            ParsedBlacklistEntry parsedEntry = BlacklistParser::parseLine(line);
-            
-            // Create BlacklistEntry if we have a valid parsed entry
-            if (parsedEntry.isValid) {
-                BlacklistEntry entry;
-                entry.provider = parsedEntry.provider;
-                entry.model = parsedEntry.model;
-                entry.reason = parsedEntry.reason;
-                entry.timestamp = parsedEntry.timestamp;
-                
-                blacklistedModels.push_back(entry);
-            }
+        // Execute the list operation
+        listOperation->execute();
+        
+        // Cast to BlacklistListOperation to get the results
+        auto* listOp = dynamic_cast<BlacklistListOperation*>(listOperation.get());
+        if (listOp) {
+            return listOp->getBlacklistedModels();
         }
-    } catch (const std::runtime_error& e) {
-        std::cerr << "Error reading blacklist file: " << e.what() << std::endl;
+        
+        // Fallback - should not happen in normal operation
+        std::cerr << "Warning: Failed to cast to BlacklistListOperation" << std::endl;
+        return std::vector<BlacklistEntry>();
+        
+    } catch (const std::exception& e) {
+        // Log error but don't crash - list operation should be resilient
+        std::cerr << "Error in getBlacklistedModels: " << e.what() << std::endl;
+        return std::vector<BlacklistEntry>();
     }
-    
-    return blacklistedModels;
 }
