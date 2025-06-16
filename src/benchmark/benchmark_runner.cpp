@@ -89,7 +89,7 @@ std::vector<std::string> BenchmarkRunner::getAvailableModels(const std::string& 
     }
 
     // Use HttpClient for API request
-    std::string result = HttpClient::get(apiUrl + "/models", apiKey);
+    std::string result = HttpClient::getRequest(apiUrl + "/models", apiKey);
     
     // Parse using existing ModelsListResponse
     ModelsListResponse response(result, provider);
@@ -217,7 +217,7 @@ BenchmarkResult BenchmarkRunner::executeModelRequest(const std::string& provider
     PerformanceTimer timer;
     timer.start();
 
-    std::string response = HttpClient::post(apiUrl + "/chat/completions", apiKey, chatRequest.toJson());
+    std::string response = HttpClient::postRequest(apiUrl + "/chat/completions", apiKey, chatRequest.toJson());
 
     result.responseTimeMs = timer.stop();
 
