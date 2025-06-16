@@ -1,7 +1,7 @@
 #include "commands/history_command.h"
+#include "file_utils.h"
 #include <iostream>
 #include <stdexcept>
-#include <filesystem>
 
 /**
  * @brief Constructs a HistoryCommand with the provided configuration.
@@ -21,9 +21,10 @@ void HistoryCommand::execute() {
     // Validate arguments before execution
     validateArgs();
     
-    // List all files in the history directory
-    for (const auto& entry : std::filesystem::directory_iterator(historyDir)) {
-        std::cout << entry.path().filename().string() << std::endl;
+    // List all files in the history directory using FileUtils
+    std::vector<std::string> files = FileUtils::listDirectory(historyDir, true);
+    for (const auto& filename : files) {
+        std::cout << filename << std::endl;
     }
     
     // Display current history file
@@ -38,12 +39,8 @@ void HistoryCommand::validateArgs() const {
         throw std::invalid_argument("History directory path is required");
     }
     
-    if (!std::filesystem::exists(historyDir)) {
+    if (!FileUtils::directoryExists(historyDir)) {
         throw std::runtime_error("History directory does not exist: " + historyDir);
-    }
-    
-    if (!std::filesystem::is_directory(historyDir)) {
-        throw std::runtime_error("History path is not a directory: " + historyDir);
     }
 }
 

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "command.h"
-#include <filesystem>
 
 /**
  * @brief Command to display conversation history files and current history.
