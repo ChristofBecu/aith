@@ -2,18 +2,22 @@
 
 #include <string>
 #include <json/json.h>
+#include <httplib.h>
+#include <memory>
 
 /**
  * @brief HTTP client for making API requests.
  * 
- * This class provides static methods for making HTTP requests using curl.
- * It abstracts the low-level curl command construction and execution,
- * providing a clean interface for GET and POST operations with authentication.
+ * This class provides static methods for making HTTP requests using both
+ * legacy curl commands and modern httplib library. The httplib methods
+ * offer better performance, error handling, and security.
  */
 class HttpClient {
 public:
+    // Legacy curl-based methods (for backward compatibility)
     /**
-     * Performs an HTTP GET request.
+     * Performs an HTTP GET request using external curl command.
+     * @deprecated Use getRequest() for better performance and error handling
      * @param url The complete URL to make the GET request to
      * @param apiKey The API key for Bearer token authentication
      * @return The response body as a string
@@ -21,11 +25,76 @@ public:
     static std::string get(const std::string& url, const std::string& apiKey);
     
     /**
-     * Performs an HTTP POST request with JSON payload.
+     * Performs an HTTP POST request with JSON payload using external curl command.
+     * @deprecated Use postRequest() for better performance and error handling
      * @param url The complete URL to make the POST request to
      * @param apiKey The API key for Bearer token authentication
      * @param payload The JSON payload to send in the request body
      * @return The response body as a string
      */
     static std::string post(const std::string& url, const std::string& apiKey, const Json::Value& payload);
+
+    // Modern httplib-based methods (recommended)
+    /**
+     * Performs an HTTP GET request using httplib library.
+     * Offers better performance, error handling, and security than curl commands.
+     * @param url The complete URL to make the GET request to
+     * @param apiKey The API key for Bearer token authentication
+     * @return The response body as a string
+     * @throws std::runtime_error if the request fails
+     * @throws std::invalid_argument if the URL format is invalid
+     */
+    static std::string getRequest(const std::string& url, const std::string& apiKey);
+    
+    /**
+     * Performs an HTTP POST request with JSON payload using httplib library.
+     * Offers better performance, error handling, and security than curl commands.
+     * @param url The complete URL to make the POST request to
+     * @param apiKey The API key for Bearer token authentication
+     * @param payload The JSON payload to send in the request body
+     * @return The response body as a string
+     * @throws std::runtime_error if the request fails
+     * @throws std::invalid_argument if the URL format is invalid
+     */
+    static std::string postRequest(const std::string& url, const std::string& apiKey, 
+                                  const Json::Value& payload);
+
+private:
+    // HTTP client configuration constants
+    static constexpr int CONNECTION_TIMEOUT_SECONDS = 30;
+    static constexpr int READ_TIMEOUT_SECONDS = 60;
+    static constexpr int WRITE_TIMEOUT_SECONDS = 60;
+
+    // Utility methods for httplib implementation
+    /**
+     * Configures HTTP client with timeouts and performance settings.
+     * Template function to work with both Client and SSLClient.
+     * @param client The HTTP client to configure
+     */
+    template<typename ClientType>
+    static void configureClient(ClientType& client);
+
+    /**
+     * Validates HTTP response and throws appropriate errors.
+     * @param response The HTTP response to validate
+     * @param operation The operation name for error messages (e.g., "GET", "POST")
+     * @throws std::runtime_error if response indicates failure
+     */
+    static void validateResponse(const httplib::Result& response, 
+                               const std::string& operation);
 };
+
+// Template method implementations
+template<typename ClientType>
+void HttpClient::configureClient(ClientType& client) {
+    // Configure timeouts for reliability
+    client.set_connection_timeout(CONNECTION_TIMEOUT_SECONDS, 0);
+    client.set_read_timeout(READ_TIMEOUT_SECONDS, 0);
+    client.set_write_timeout(WRITE_TIMEOUT_SECONDS, 0);
+    
+    // Enable keep-alive for better performance
+    client.set_keep_alive(true);
+    
+    // Enable compression for smaller payloads
+    client.set_compress(true);
+}
