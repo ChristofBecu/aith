@@ -1,6 +1,7 @@
 #include "http_client.h"
 #include <httplib.h>
 #include <stdexcept>
+#include <regex>
 
 // ====================================================================
 // HTTP client methods using httplib library
@@ -11,8 +12,11 @@
  * Offers excellent performance, error handling, and security.
  */
 std::string HttpClient::get(const std::string& url, const std::string& apiKey) {
-    // httplib::Client can handle both HTTP and HTTPS automatically based on URL
-    httplib::Client client(url);
+    // Parse URL to extract base URL and path
+    auto [baseUrl, path] = parseUrl(url);
+    
+    // Create HTTP client with base URL only
+    httplib::Client client(baseUrl);
     configureClient(client);
     
     // Set headers
@@ -21,8 +25,8 @@ std::string HttpClient::get(const std::string& url, const std::string& apiKey) {
         {"User-Agent", "aith/1.0"}
     };
     
-    // Make the request (path is "/" since we pass full URL to constructor)
-    auto response = client.Get("/", headers);
+    // Make the request with the correct path
+    auto response = client.Get(path, headers);
     validateResponse(response, "GET");
     
     return response->body;
@@ -34,13 +38,19 @@ std::string HttpClient::get(const std::string& url, const std::string& apiKey) {
  */
 std::string HttpClient::post(const std::string& url, const std::string& apiKey, 
                             const Json::Value& payload) {
-    // httplib::Client can handle both HTTP and HTTPS automatically based on URL
-    httplib::Client client(url);
+    // Parse URL to extract base URL and path
+    auto [baseUrl, path] = parseUrl(url);
+    
+    // Create HTTP client with base URL only
+    httplib::Client client(baseUrl);
     configureClient(client);
     
     // Convert JSON payload to string
     Json::StreamWriterBuilder writer;
     std::string jsonData = Json::writeString(writer, payload);
+
+    // write payload to terminal for debugging
+    std::cout << "POST Payload: " << jsonData << std::endl;
     
     // Set headers
     httplib::Headers headers = {
@@ -49,8 +59,8 @@ std::string HttpClient::post(const std::string& url, const std::string& apiKey,
         {"User-Agent", "aith/1.0"}
     };
     
-    // Make the request (path is "/" since we pass full URL to constructor)
-    auto response = client.Post("/", headers, jsonData, "application/json");
+    // Make the request with the correct path
+    auto response = client.Post(path, headers, jsonData, "application/json");
     validateResponse(response, "POST");
     
     return response->body;
@@ -109,4 +119,33 @@ void HttpClient::validateResponse(const httplib::Result& response,
         
         throw std::runtime_error(errorMsg);
     }
+}
+
+/**
+ * Parses a full URL into base URL and path components.
+ * @param url The full URL to parse
+ * @return A pair containing [baseUrl, path]
+ */
+std::pair<std::string, std::string> HttpClient::parseUrl(const std::string& url) {
+    // Regular expression to parse URL components
+    // Matches: scheme://host[:port][/path]
+    std::regex urlRegex(R"(^(https?://)([^/]+)(/.*)?$)");
+    std::smatch matches;
+    
+    if (!std::regex_match(url, matches, urlRegex)) {
+        throw std::invalid_argument("Invalid URL format: " + url);
+    }
+    
+    std::string scheme = matches[1].str();      // "http://" or "https://"
+    std::string host = matches[2].str();        // "example.com" or "example.com:8080"
+    std::string path = matches[3].str();        // "/path" or empty
+    
+    // If no path specified, default to "/"
+    if (path.empty()) {
+        path = "/";
+    }
+    
+    std::string baseUrl = scheme + host;
+    
+    return std::make_pair(baseUrl, path);
 }

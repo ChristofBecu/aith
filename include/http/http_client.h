@@ -62,6 +62,14 @@ private:
      */
     static void validateResponse(const httplib::Result& response, 
                                const std::string& operation);
+    
+    /**
+     * Parses a full URL into base URL and path components.
+     * @param url The full URL to parse
+     * @return A pair containing [baseUrl, path]
+     * @throws std::invalid_argument if URL format is invalid
+     */
+    static std::pair<std::string, std::string> parseUrl(const std::string& url);
 };
 
 // Template method implementations
@@ -75,6 +83,7 @@ void HttpClient::configureClient(ClientType& client) {
     // Enable keep-alive for better performance
     client.set_keep_alive(true);
     
-    // Enable compression for smaller payloads
-    client.set_compress(true);
+    // Disable compression to avoid JSON parsing issues with APIs
+    // Many APIs don't handle compressed request bodies properly
+    client.set_compress(false);
 }
