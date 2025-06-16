@@ -1,7 +1,6 @@
 #include "config_manager.h"
 #include "system_utils.h"
-#include <filesystem>
-#include <fstream>
+#include "file_utils.h"
 #include <algorithm>
 
 /**
@@ -63,7 +62,7 @@ std::string ConfigManager::getProviderConfigValue(const std::string &provider, c
     
     // Try each possible config file path
     for (const auto& configPath : possibleConfigPaths) {
-        if (std::filesystem::exists(configPath)) {
+        if (FileUtils::fileExists(configPath)) {
             std::string value = readConfigFile(configPath, key);
             if (!value.empty()) {
                 return value;
@@ -79,26 +78,17 @@ std::string ConfigManager::getProviderConfigValue(const std::string &provider, c
  * Reads a configuration value from a specific file.
  */
 std::string ConfigManager::readConfigFile(const std::string &configPath, const std::string &key) {
-    if (!std::filesystem::exists(configPath)) {
+    if (!FileUtils::fileExists(configPath)) {
         return "";
     }
     
-    std::ifstream configFile(configPath);
-    if (!configFile.is_open()) {
+    try {
+        std::string value = FileUtils::readConfigValue(configPath, key);
+        return removeQuotes(value);
+    } catch (const std::exception&) {
+        // If reading fails, return empty string (maintains existing behavior)
         return "";
     }
-    
-    std::string line;
-    std::string searchKey = key + "=";
-    
-    while (std::getline(configFile, line)) {
-        if (line.substr(0, searchKey.length()) == searchKey) {
-            std::string value = line.substr(searchKey.length());
-            return removeQuotes(value);
-        }
-    }
-    
-    return "";
 }
 
 /**
@@ -142,18 +132,14 @@ std::string ConfigManager::getDefaultPrompt() {
     std::string configDir = getConfigDir();
     std::string defaultPromptPath = configDir + "/defaultprompt";
     
-    if (!std::filesystem::exists(defaultPromptPath)) {
+    if (!FileUtils::fileExists(defaultPromptPath)) {
         return "";
     }
     
-    std::ifstream defaultPromptFile(defaultPromptPath);
-    if (!defaultPromptFile.is_open()) {
+    try {
+        return FileUtils::readFile(defaultPromptPath);
+    } catch (const std::exception&) {
+        // If reading fails, return empty string (maintains existing behavior)
         return "";
     }
-    
-    std::ostringstream buffer;
-    buffer << defaultPromptFile.rdbuf();
-    defaultPromptFile.close();
-    
-    return buffer.str();
 }
