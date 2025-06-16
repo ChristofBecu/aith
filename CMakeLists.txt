@@ -61,6 +61,7 @@ set(BENCHMARK_SOURCES
 set(CHAT_SOURCES
     src/chat/history.cpp
     src/chat/markdown.cpp
+    src/chat/markdown_renderer.cpp
 )
 
 set(UTILS_SOURCES
@@ -125,16 +126,27 @@ FetchContent_Declare(
     GIT_TAG 1.9.6
 )
 
+# Fetch md4c for C++ markdown rendering - replace mdcat external dependency
+FetchContent_Declare(
+    md4c
+    GIT_REPOSITORY https://github.com/mity/md4c.git
+    GIT_TAG release-0.5.2
+)
+
 # Configure jsoncpp to not build tests/examples
 set(JSONCPP_WITH_TESTS OFF CACHE BOOL "Build jsoncpp tests" FORCE)
 set(JSONCPP_WITH_POST_BUILD_UNITTEST OFF CACHE BOOL "Automatically run unit-tests as a post build step" FORCE)
 set(JSONCPP_WITH_EXAMPLE OFF CACHE BOOL "Build jsoncpp examples" FORCE)
 
+# Configure md4c to only build what we need
+set(MD4C_BUILD_MD2HTML OFF CACHE BOOL "Don't build md2html utility" FORCE)
+set(MD4C_BUILD_TESTS OFF CACHE BOOL "Don't build md4c tests" FORCE)
+
 # Temporarily suppress deprecation warnings from external dependencies
 set(CMAKE_WARN_DEPRECATED OFF CACHE BOOL "" FORCE)
 
-# Make both available
-FetchContent_MakeAvailable(httplib jsoncpp)
+# Make all dependencies available
+FetchContent_MakeAvailable(httplib jsoncpp md4c)
 
 # Restore normal warning behavior after fetching external dependencies
 set(CMAKE_WARN_DEPRECATED ON CACHE BOOL "" FORCE)
@@ -147,3 +159,9 @@ target_link_libraries(aith PRIVATE OpenSSL::SSL OpenSSL::Crypto)
 
 # Link JsonCpp - use the static library target
 target_link_libraries(aith PRIVATE jsoncpp_static)
+
+# Link md4c for markdown rendering
+target_link_libraries(aith PRIVATE md4c)
+
+# Add md4c include directory
+target_include_directories(aith PRIVATE ${md4c_SOURCE_DIR}/src)
