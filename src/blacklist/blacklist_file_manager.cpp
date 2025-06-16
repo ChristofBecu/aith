@@ -1,7 +1,6 @@
 #include "blacklist_file_manager.h"
 #include "system_utils.h"
-#include <filesystem>
-#include <fstream>
+#include "file_utils.h"
 #include <iostream>
 #include <stdexcept>
 
@@ -16,30 +15,22 @@ BlacklistFileManager::BlacklistFileManager()
  * Checks if the blacklist file exists
  */
 bool BlacklistFileManager::exists() const {
-    return std::filesystem::exists(blacklistPath_);
+    return FileUtils::fileExists(blacklistPath_);
 }
 
 /**
  * Reads all lines from the blacklist file
  */
 std::vector<std::string> BlacklistFileManager::readAllLines() const {
-    std::vector<std::string> lines;
-    
     if (!exists()) {
-        return lines; // Return empty vector if file doesn't exist
+        return {}; // Return empty vector if file doesn't exist
     }
     
-    std::ifstream file(blacklistPath_);
-    if (!file.is_open()) {
-        throw std::runtime_error("Could not open blacklist file for reading: " + blacklistPath_);
+    try {
+        return FileUtils::readAllLines(blacklistPath_);
+    } catch (const std::exception& e) {
+        throw std::runtime_error("Could not read blacklist file: " + blacklistPath_ + " - " + e.what());
     }
-    
-    std::string line;
-    while (std::getline(file, line)) {
-        lines.push_back(line);
-    }
-    
-    return lines;
 }
 
 /**
@@ -48,17 +39,10 @@ std::vector<std::string> BlacklistFileManager::readAllLines() const {
 void BlacklistFileManager::writeAllLines(const std::vector<std::string>& lines) const {
     ensureConfigDirectoryExists();
     
-    std::ofstream file(blacklistPath_);
-    if (!file.is_open()) {
-        throw std::runtime_error("Could not open blacklist file for writing: " + blacklistPath_);
-    }
-    
-    for (const auto& line : lines) {
-        file << line << std::endl;
-    }
-    
-    if (file.fail()) {
-        throw std::runtime_error("Failed to write to blacklist file: " + blacklistPath_);
+    try {
+        FileUtils::writeAllLines(blacklistPath_, lines);
+    } catch (const std::exception& e) {
+        throw std::runtime_error("Could not write to blacklist file: " + blacklistPath_ + " - " + e.what());
     }
 }
 
@@ -68,15 +52,10 @@ void BlacklistFileManager::writeAllLines(const std::vector<std::string>& lines) 
 void BlacklistFileManager::appendLine(const std::string& line) const {
     ensureConfigDirectoryExists();
     
-    std::ofstream file(blacklistPath_, std::ios::app);
-    if (!file.is_open()) {
-        throw std::runtime_error("Could not open blacklist file for appending: " + blacklistPath_);
-    }
-    
-    file << line << std::endl;
-    
-    if (file.fail()) {
-        throw std::runtime_error("Failed to append to blacklist file: " + blacklistPath_);
+    try {
+        FileUtils::appendLine(blacklistPath_, line);
+    } catch (const std::exception& e) {
+        throw std::runtime_error("Could not append to blacklist file: " + blacklistPath_ + " - " + e.what());
     }
 }
 
@@ -86,13 +65,10 @@ void BlacklistFileManager::appendLine(const std::string& line) const {
 void BlacklistFileManager::ensureConfigDirectoryExists() const {
     std::string configDir = getConfigDirectory();
     
-    if (!std::filesystem::exists(configDir)) {
-        try {
-            std::filesystem::create_directories(configDir);
-        } catch (const std::filesystem::filesystem_error& e) {
-            throw std::runtime_error("Could not create config directory: " + configDir + 
-                                   " - " + e.what());
-        }
+    try {
+        FileUtils::createDirectories(configDir);
+    } catch (const std::exception& e) {
+        throw std::runtime_error("Could not create config directory: " + configDir + " - " + e.what());
     }
 }
 
@@ -111,8 +87,7 @@ bool BlacklistFileManager::canRead() const {
         return false;
     }
     
-    std::ifstream file(blacklistPath_);
-    return file.good();
+    return FileUtils::canRead(blacklistPath_);
 }
 
 /**
@@ -126,9 +101,7 @@ bool BlacklistFileManager::canWrite() const {
         return false;
     }
     
-    // Try to open file for writing (this will create it if it doesn't exist)
-    std::ofstream file(blacklistPath_, std::ios::app);
-    return file.good();
+    return FileUtils::canWrite(blacklistPath_);
 }
 
 /**
