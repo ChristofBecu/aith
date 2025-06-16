@@ -102,15 +102,21 @@ add_executable(aith ${ALL_SOURCES})
 # Find and link libraries
 # Note: CURL dependency removed - now using httplib for HTTP requests
 
+# Find OpenSSL for HTTPS support
+find_package(OpenSSL REQUIRED)
+
 # Fetch cpp-httplib for modern HTTP client functionality
 include(FetchContent)
 
-# Fetch httplib
+# Fetch httplib with SSL support
 FetchContent_Declare(
     httplib
     GIT_REPOSITORY https://github.com/yhirose/cpp-httplib.git
     GIT_TAG v0.21.0
 )
+
+# Enable HTTPS support for httplib
+set(HTTPLIB_USE_OPENSSL_IF_AVAILABLE ON CACHE BOOL "Enable OpenSSL support for httplib" FORCE)
 
 # Fetch jsoncpp for JSON handling - disable tests and examples
 FetchContent_Declare(
@@ -135,6 +141,9 @@ set(CMAKE_WARN_DEPRECATED ON CACHE BOOL "" FORCE)
 
 # Link the required libraries
 target_link_libraries(aith PRIVATE httplib::httplib)
+
+# Link OpenSSL for HTTPS support
+target_link_libraries(aith PRIVATE OpenSSL::SSL OpenSSL::Crypto)
 
 # Link JsonCpp - use the static library target
 target_link_libraries(aith PRIVATE jsoncpp_static)
