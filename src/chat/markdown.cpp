@@ -1,28 +1,15 @@
 #include "markdown.h"
+#include "markdown_renderer.h"
 #include <iostream>
-#include <fstream>
-#include <cstdio>
 
 // Documentation added for functions and classes in this file.
 /**
- * Renders a Markdown string to the terminal using mdcat.
+ * Renders a Markdown string to the terminal using native C++ markdown rendering.
+ * This replaces the external mdcat dependency with a lightweight C++ solution.
  * @param markdown The Markdown string to render.
  */
 void renderMarkdown(const std::string &markdown) {
-    std::string tempFile = "/tmp/markdown.md";
-    std::ofstream outFile(tempFile);
-    if (!outFile) {
-        std::cerr << "Failed to create temporary file for Markdown rendering." << std::endl;
-        return;
-    }
-    outFile << markdown;
-    outFile.close();
-
-    std::string command = "mdcat " + tempFile;
-    int ret_code = std::system(command.c_str());
-    if (ret_code != 0) {
-        std::cerr << "Failed to render Markdown with mdcat." << std::endl;
-    }
-
-    std::remove(tempFile.c_str());
+    TerminalMarkdownRenderer renderer;
+    std::string rendered = renderer.render(markdown);
+    std::cout << rendered << std::flush;
 }
