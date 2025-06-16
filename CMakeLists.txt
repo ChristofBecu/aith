@@ -102,8 +102,18 @@ add_executable(aith ${ALL_SOURCES})
 # Find and link libraries
 find_package(CURL REQUIRED)
 
+# Fetch cpp-httplib for modern HTTP client functionality
+include(FetchContent)
+FetchContent_Declare(
+    httplib
+    GIT_REPOSITORY https://github.com/yhirose/cpp-httplib.git
+    GIT_TAG v0.15.3
+)
+FetchContent_MakeAvailable(httplib)
+
 # Link the required libraries
 target_link_libraries(aith PRIVATE CURL::libcurl)
+target_link_libraries(aith PRIVATE httplib::httplib)
 
 # Manually find and link JsonCpp library
 find_library(JSONCPP_LIB jsoncpp REQUIRED)

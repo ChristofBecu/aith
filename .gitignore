@@ -5,6 +5,9 @@ CMakeCache.txt
 cmake_install.cmake
 Makefile
 
+# CMake FetchContent dependencies
+_deps/
+
 # Temporary files
 *.tmp
 *.temp
