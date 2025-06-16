@@ -1,5 +1,5 @@
 #include "commands/history_command.h"
-#include "file_utils.h"
+#include "directory_operations.h"
 #include <iostream>
 #include <stdexcept>
 
@@ -21,8 +21,8 @@ void HistoryCommand::execute() {
     // Validate arguments before execution
     validateArgs();
     
-    // List all files in the history directory using FileUtils
-    std::vector<std::string> files = FileUtils::listDirectory(historyDir, true);
+    // List all files in the history directory using DirectoryOperations
+    std::vector<std::string> files = DirectoryOperations::list(historyDir, true);
     for (const auto& filename : files) {
         std::cout << filename << std::endl;
     }
@@ -39,7 +39,7 @@ void HistoryCommand::validateArgs() const {
         throw std::invalid_argument("History directory path is required");
     }
     
-    if (!FileUtils::directoryExists(historyDir)) {
+    if (!DirectoryOperations::exists(historyDir)) {
         throw std::runtime_error("History directory does not exist: " + historyDir);
     }
 }

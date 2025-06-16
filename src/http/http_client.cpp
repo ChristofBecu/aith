@@ -1,6 +1,7 @@
 #include "http_client.h"
 #include "system_utils.h"
-#include "file_utils.h"
+#include "temp_file_manager.h"
+#include "file_operations.h"
 #include <sstream>
 
 /**
@@ -19,8 +20,8 @@ std::string HttpClient::post(const std::string& url, const std::string& apiKey, 
     Json::StreamWriterBuilder writer;
     std::string payloadJson = Json::writeString(writer, payload);
     
-    // Create temporary file with JSON content using FileUtils
-    std::string tempFile = FileUtils::createTempFileWithTimestamp(payloadJson, "aith_payload");
+    // Create temporary file with JSON content using TempFileManager
+    std::string tempFile = TempFileManager::createTempFileWithTimestamp(payloadJson, "aith_payload");
     
     std::string command = "curl -s -X POST \"" + url + "\" " +
                          "-H \"Authorization: Bearer " + apiKey + "\" " +
@@ -29,8 +30,9 @@ std::string HttpClient::post(const std::string& url, const std::string& apiKey, 
     
     std::string response = SystemUtils::exec(command.c_str());
     
-    // Clean up the temporary file using FileUtils
-    FileUtils::removeFile(tempFile);
+    // Clean up the temporary file using FileOperations
+    // Note: TempFileManager doesn't have a remove method, we'll use FileOperations for cleanup
+    FileOperations::remove(tempFile);
     
     return response;
 }
