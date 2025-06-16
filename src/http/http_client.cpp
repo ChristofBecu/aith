@@ -1,7 +1,6 @@
 #include "http_client.h"
 #include "system_utils.h"
-#include <fstream>
-#include <filesystem>
+#include "file_utils.h"
 #include <sstream>
 
 /**
@@ -16,7 +15,12 @@ std::string HttpClient::get(const std::string& url, const std::string& apiKey) {
  * Performs an HTTP POST request with JSON payload.
  */
 std::string HttpClient::post(const std::string& url, const std::string& apiKey, const Json::Value& payload) {
-    std::string tempFile = writeJsonToTempFile(payload);
+    // Convert JSON payload to string for temporary file creation
+    Json::StreamWriterBuilder writer;
+    std::string payloadJson = Json::writeString(writer, payload);
+    
+    // Create temporary file with JSON content using FileUtils
+    std::string tempFile = FileUtils::createTempFileWithTimestamp(payloadJson, "aith_payload");
     
     std::string command = "curl -s -X POST \"" + url + "\" " +
                          "-H \"Authorization: Bearer " + apiKey + "\" " +
@@ -25,33 +29,8 @@ std::string HttpClient::post(const std::string& url, const std::string& apiKey, 
     
     std::string response = SystemUtils::exec(command.c_str());
     
-    // Clean up the temporary file
-    cleanupTempFile(tempFile);
+    // Clean up the temporary file using FileUtils
+    FileUtils::removeFile(tempFile);
     
     return response;
-}
-
-/**
- * Writes JSON payload to a temporary file and returns the file path.
- */
-std::string HttpClient::writeJsonToTempFile(const Json::Value& payload) {
-    std::string tempFile = "/tmp/aith_payload_" + std::to_string(std::time(nullptr)) + ".json";
-    
-    Json::StreamWriterBuilder writer;
-    std::string payloadJson = Json::writeString(writer, payload);
-    
-    std::ofstream outFile(tempFile);
-    outFile << payloadJson;
-    outFile.close();
-    
-    return tempFile;
-}
-
-/**
- * Removes a temporary file if it exists.
- */
-void HttpClient::cleanupTempFile(const std::string& filePath) {
-    if (std::filesystem::exists(filePath)) {
-        std::filesystem::remove(filePath);
-    }
 }

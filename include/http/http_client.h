@@ -28,18 +28,4 @@ public:
      * @return The response body as a string
      */
     static std::string post(const std::string& url, const std::string& apiKey, const Json::Value& payload);
-
-private:
-    /**
-     * Writes JSON payload to a temporary file and returns the file path.
-     * @param payload The JSON payload to write
-     * @return The path to the temporary file containing the JSON payload
-     */
-    static std::string writeJsonToTempFile(const Json::Value& payload);
-    
-    /**
-     * Removes a temporary file if it exists.
-     * @param filePath The path to the file to remove
-     */
-    static void cleanupTempFile(const std::string& filePath);
 };
