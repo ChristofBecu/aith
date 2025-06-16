@@ -48,10 +48,7 @@ std::string HttpClient::post(const std::string& url, const std::string& apiKey,
     // Convert JSON payload to string
     Json::StreamWriterBuilder writer;
     std::string jsonData = Json::writeString(writer, payload);
-
-    // write payload to terminal for debugging
-    std::cout << "POST Payload: " << jsonData << std::endl;
-    
+   
     // Set headers
     httplib::Headers headers = {
         {"Authorization", "Bearer " + apiKey},
