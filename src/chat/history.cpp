@@ -1,7 +1,6 @@
 #include "history.h"
+#include "file_utils.h"
 #include <json/json.h>
-#include <fstream>
-#include <filesystem>
 #include <algorithm>
 #include <cctype>
 #include <ctime>
@@ -14,29 +13,27 @@
  * @param currentHistory The path to the current history file.
  */
 void startNewHistory(const std::string &prompt, const std::string &historyDir, const std::string &currentHistory) {
-    if (std::filesystem::exists(currentHistory)) {
+    if (FileUtils::fileExists(currentHistory)) {
         std::time_t now = std::time(nullptr);
         char timestamp[20];
         std::strftime(timestamp, sizeof(timestamp), "%Y%m%d_%H%M%S", std::localtime(&now));
         std::string title = prompt;
         std::replace(title.begin(), title.end(), ' ', '_');
         title.erase(std::remove_if(title.begin(), title.end(), [](char c) { return !std::isalnum(c) && c != '_'; }), title.end());
-        std::filesystem::rename(currentHistory, historyDir + "/history_" + title + "_" + timestamp + ".json");
+        FileUtils::renameFile(currentHistory, historyDir + "/history_" + title + "_" + timestamp + ".json");
     }
 
-    std::ofstream file(currentHistory);
-    file << "[]";
-    file.close();
+    // Create initial empty history array
+    FileUtils::writeFile(currentHistory, "[]");
 
+    // Add the initial user prompt to the history
     Json::Value history(Json::arrayValue);
     Json::Value entry;
     entry["role"] = "user";
     entry["content"] = prompt;
     history.append(entry);
 
-    std::ofstream historyFile(currentHistory);
-    historyFile << history;
-    historyFile.close();
+    FileUtils::writeJsonFile(currentHistory, history);
 }
 
 /**
@@ -46,29 +43,22 @@ void startNewHistory(const std::string &prompt, const std::string &historyDir, c
  * @param currentHistory The path to the current history file.
  */
 void addToHistory(const std::string &role, const std::string &content, const std::string &currentHistory) {
-    std::ifstream file(currentHistory);
-    Json::Value history;
-    file >> history;
-    file.close();
+    Json::Value history = FileUtils::readJsonFile(currentHistory);
 
     Json::Value entry;
     entry["role"] = role;
     entry["content"] = content;
     history.append(entry);
 
-    std::ofstream historyFile(currentHistory);
-    historyFile << history;
-    historyFile.close();
+    FileUtils::writeJsonFile(currentHistory, history);
 }
 
 /**
  * Ensures that a history file exists, creating it with an empty JSON array if it doesn't.
  */
 void ensureHistoryFileExists(const std::string &historyPath) {
-    if (!std::filesystem::exists(historyPath)) {
-        std::ofstream file(historyPath);
-        file << "[]";
-        file.close();
+    if (!FileUtils::fileExists(historyPath)) {
+        FileUtils::writeFile(historyPath, "[]");
     }
 }
 
@@ -76,13 +66,15 @@ void ensureHistoryFileExists(const std::string &historyPath) {
  * Loads chat history from a file.
  */
 Json::Value loadChatHistory(const std::string &historyPath) {
-    std::ifstream file(historyPath);
-    Json::Value history;
-    if (file.is_open()) {
-        file >> history;
-        file.close();
+    if (FileUtils::fileExists(historyPath)) {
+        try {
+            return FileUtils::readJsonFile(historyPath);
+        } catch (const std::exception&) {
+            // If reading fails, return empty array (maintains existing behavior)
+            return Json::Value(Json::arrayValue);
+        }
     }
-    return history;
+    return Json::Value(Json::arrayValue);
 }
 
 /**
