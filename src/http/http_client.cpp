@@ -1,56 +1,16 @@
 #include "http_client.h"
-#include "system_utils.h"
-#include "temp_file_manager.h"
-#include "file_operations.h"
 #include <httplib.h>
-#include <sstream>
 #include <stdexcept>
-#include <regex>
+
+// ====================================================================
+// HTTP client methods using httplib library
+// ====================================================================
 
 /**
- * Legacy curl-based HTTP GET request.
- * @deprecated Use getRequest() for better performance and error handling
+ * HTTP GET request using httplib library.
+ * Offers excellent performance, error handling, and security.
  */
 std::string HttpClient::get(const std::string& url, const std::string& apiKey) {
-    std::string command = "curl -s -X GET \"" + url + "\" -H \"Authorization: Bearer " + apiKey + "\"";
-    return SystemUtils::exec(command.c_str());
-}
-
-/**
- * Legacy curl-based HTTP POST request with JSON payload.
- * @deprecated Use postRequest() for better performance and error handling
- */
-std::string HttpClient::post(const std::string& url, const std::string& apiKey, const Json::Value& payload) {
-    // Convert JSON payload to string for temporary file creation
-    Json::StreamWriterBuilder writer;
-    std::string payloadJson = Json::writeString(writer, payload);
-    
-    // Create temporary file with JSON content using TempFileManager
-    std::string tempFile = TempFileManager::createTempFileWithTimestamp(payloadJson, "aith_payload");
-    
-    std::string command = "curl -s -X POST \"" + url + "\" " +
-                         "-H \"Authorization: Bearer " + apiKey + "\" " +
-                         "-H \"Content-Type: application/json\" " +
-                         "-d @" + tempFile;
-    
-    std::string response = SystemUtils::exec(command.c_str());
-    
-    // Clean up the temporary file using FileOperations
-    // Note: TempFileManager doesn't have a remove method, we'll use FileOperations for cleanup
-    FileOperations::remove(tempFile);
-    
-    return response;
-}
-
-// ====================================================================
-// Modern httplib-based HTTP client methods
-// ====================================================================
-
-/**
- * Modern HTTP GET request using httplib library.
- * Offers better performance, error handling, and security.
- */
-std::string HttpClient::getRequest(const std::string& url, const std::string& apiKey) {
     // httplib::Client can handle both HTTP and HTTPS automatically based on URL
     httplib::Client client(url);
     configureClient(client);
@@ -69,11 +29,11 @@ std::string HttpClient::getRequest(const std::string& url, const std::string& ap
 }
 
 /**
- * Modern HTTP POST request with JSON payload using httplib library.
- * Offers better performance, error handling, and security.
+ * HTTP POST request with JSON payload using httplib library.
+ * Offers excellent performance, error handling, and security.
  */
-std::string HttpClient::postRequest(const std::string& url, const std::string& apiKey, 
-                                   const Json::Value& payload) {
+std::string HttpClient::post(const std::string& url, const std::string& apiKey, 
+                            const Json::Value& payload) {
     // httplib::Client can handle both HTTP and HTTPS automatically based on URL
     httplib::Client client(url);
     configureClient(client);

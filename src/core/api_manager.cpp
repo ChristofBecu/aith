@@ -30,7 +30,7 @@ void ApiManager::listModels(const std::string &apiKey) {
     
     ApiConsole::displayModelsFetchStatus(provider);
     
-    std::string result = HttpClient::getRequest(apiUrl + "/models", apiKey);
+    std::string result = HttpClient::get(apiUrl + "/models", apiKey);
     
     ModelsListResponse response(result, provider);
     
@@ -81,7 +81,7 @@ void ApiManager::chat(const std::string &prompt, const std::string &model, const
     
     ApiConsole::displayChatRequestStatus(provider, selectedModel);
     
-    std::string responseJson = HttpClient::postRequest(apiUrl + "/chat/completions", apiKey, request.toJson());
+    std::string responseJson = HttpClient::post(apiUrl + "/chat/completions", apiKey, request.toJson());
     
     // Parse response
     ChatResponse response(responseJson);

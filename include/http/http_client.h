@@ -6,49 +6,29 @@
 #include <memory>
 
 /**
- * @brief HTTP client for making API requests.
+ * @brief Modern HTTP client for making API requests.
  * 
- * This class provides static methods for making HTTP requests using both
- * legacy curl commands and modern httplib library. The httplib methods
- * offer better performance, error handling, and security.
+ * This class provides static methods for making HTTP requests using the
+ * high-performance httplib library. Offers excellent performance, detailed
+ * error handling, automatic SSL/TLS support, and enhanced security.
  */
 class HttpClient {
 public:
-    // Legacy curl-based methods (for backward compatibility)
+    // HTTP client methods using httplib library
     /**
-     * Performs an HTTP GET request using external curl command.
-     * @deprecated Use getRequest() for better performance and error handling
+     * Performs an HTTP GET request using httplib library.
+     * Offers excellent performance, error handling, and security.
      * @param url The complete URL to make the GET request to
      * @param apiKey The API key for Bearer token authentication
      * @return The response body as a string
+     * @throws std::runtime_error if the request fails
+     * @throws std::invalid_argument if the URL format is invalid
      */
     static std::string get(const std::string& url, const std::string& apiKey);
     
     /**
-     * Performs an HTTP POST request with JSON payload using external curl command.
-     * @deprecated Use postRequest() for better performance and error handling
-     * @param url The complete URL to make the POST request to
-     * @param apiKey The API key for Bearer token authentication
-     * @param payload The JSON payload to send in the request body
-     * @return The response body as a string
-     */
-    static std::string post(const std::string& url, const std::string& apiKey, const Json::Value& payload);
-
-    // Modern httplib-based methods (recommended)
-    /**
-     * Performs an HTTP GET request using httplib library.
-     * Offers better performance, error handling, and security than curl commands.
-     * @param url The complete URL to make the GET request to
-     * @param apiKey The API key for Bearer token authentication
-     * @return The response body as a string
-     * @throws std::runtime_error if the request fails
-     * @throws std::invalid_argument if the URL format is invalid
-     */
-    static std::string getRequest(const std::string& url, const std::string& apiKey);
-    
-    /**
      * Performs an HTTP POST request with JSON payload using httplib library.
-     * Offers better performance, error handling, and security than curl commands.
+     * Offers excellent performance, error handling, and security.
      * @param url The complete URL to make the POST request to
      * @param apiKey The API key for Bearer token authentication
      * @param payload The JSON payload to send in the request body
@@ -56,8 +36,8 @@ public:
      * @throws std::runtime_error if the request fails
      * @throws std::invalid_argument if the URL format is invalid
      */
-    static std::string postRequest(const std::string& url, const std::string& apiKey, 
-                                  const Json::Value& payload);
+    static std::string post(const std::string& url, const std::string& apiKey, 
+                           const Json::Value& payload);
 
 private:
     // HTTP client configuration constants

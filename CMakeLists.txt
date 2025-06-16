@@ -100,7 +100,7 @@ set(ALL_SOURCES
 add_executable(aith ${ALL_SOURCES})
 
 # Find and link libraries
-find_package(CURL REQUIRED)
+# Note: CURL dependency removed - now using httplib for HTTP requests
 
 # Fetch cpp-httplib for modern HTTP client functionality
 include(FetchContent)
@@ -112,7 +112,6 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(httplib)
 
 # Link the required libraries
-target_link_libraries(aith PRIVATE CURL::libcurl)
 target_link_libraries(aith PRIVATE httplib::httplib)
 
 # Manually find and link JsonCpp library
