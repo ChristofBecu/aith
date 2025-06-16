@@ -1,7 +1,7 @@
 #include "application_setup.h"
 #include "provider_manager.h"
 #include "system_utils.h"
-#include <filesystem>
+#include "file_utils.h"
 #include <iostream>
 #include <stdexcept>
 
@@ -53,8 +53,8 @@ void ApplicationSetup::validateApiKey(const Config& config) {
  */
 void ApplicationSetup::ensureDirectoriesExist(const std::string& historyDir) {
     try {
-        std::filesystem::create_directories(historyDir);
-    } catch (const std::filesystem::filesystem_error& e) {
+        FileUtils::createDirectories(historyDir);
+    } catch (const std::exception& e) {
         throw std::runtime_error("Failed to create history directory: " + std::string(e.what()));
     }
 }
