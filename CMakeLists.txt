@@ -104,20 +104,37 @@ add_executable(aith ${ALL_SOURCES})
 
 # Fetch cpp-httplib for modern HTTP client functionality
 include(FetchContent)
+
+# Fetch httplib
 FetchContent_Declare(
     httplib
     GIT_REPOSITORY https://github.com/yhirose/cpp-httplib.git
     GIT_TAG v0.21.0
 )
-FetchContent_MakeAvailable(httplib)
+
+# Fetch jsoncpp for JSON handling - disable tests and examples
+FetchContent_Declare(
+    jsoncpp
+    GIT_REPOSITORY https://github.com/open-source-parsers/jsoncpp.git
+    GIT_TAG 1.9.6
+)
+
+# Configure jsoncpp to not build tests/examples
+set(JSONCPP_WITH_TESTS OFF CACHE BOOL "Build jsoncpp tests" FORCE)
+set(JSONCPP_WITH_POST_BUILD_UNITTEST OFF CACHE BOOL "Automatically run unit-tests as a post build step" FORCE)
+set(JSONCPP_WITH_EXAMPLE OFF CACHE BOOL "Build jsoncpp examples" FORCE)
+
+# Temporarily suppress deprecation warnings from external dependencies
+set(CMAKE_WARN_DEPRECATED OFF CACHE BOOL "" FORCE)
+
+# Make both available
+FetchContent_MakeAvailable(httplib jsoncpp)
+
+# Restore normal warning behavior after fetching external dependencies
+set(CMAKE_WARN_DEPRECATED ON CACHE BOOL "" FORCE)
 
 # Link the required libraries
 target_link_libraries(aith PRIVATE httplib::httplib)
 
-# Manually find and link JsonCpp library
-find_library(JSONCPP_LIB jsoncpp REQUIRED)
-if (JSONCPP_LIB)
-    target_link_libraries(aith PRIVATE ${JSONCPP_LIB})
-else()
-    message(FATAL_ERROR "JsonCpp library not found")
-endif()
+# Link JsonCpp - use the static library target
+target_link_libraries(aith PRIVATE jsoncpp_static)
