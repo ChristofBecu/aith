@@ -1,5 +1,5 @@
 #include "benchmark_request.h"
-#include "file_utils.h"
+#include "temp_file_manager.h"
 #include "string_utils.h"
 #include <json/json.h>
 
@@ -73,5 +73,5 @@ std::string BenchmarkRequest::toJsonString() const {
  */
 std::string BenchmarkRequest::createTempFile(const std::string& sanitizedModelName) const {
     std::string jsonContent = toJsonString();
-    return FileUtils::createTempJsonFile(jsonContent, "benchmark_payload_" + sanitizedModelName);
+    return TempFileManager::createTempJsonFile(jsonContent, "benchmark_payload_" + sanitizedModelName);
 }

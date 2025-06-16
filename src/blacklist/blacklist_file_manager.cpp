@@ -1,6 +1,8 @@
 #include "blacklist_file_manager.h"
 #include "system_utils.h"
-#include "file_utils.h"
+#include "file_operations.h"
+#include "directory_operations.h"
+#include "file_permissions.h"
 #include <iostream>
 #include <stdexcept>
 
@@ -15,7 +17,7 @@ BlacklistFileManager::BlacklistFileManager()
  * Checks if the blacklist file exists
  */
 bool BlacklistFileManager::exists() const {
-    return FileUtils::fileExists(blacklistPath_);
+    return FileOperations::exists(blacklistPath_);
 }
 
 /**
@@ -27,7 +29,7 @@ std::vector<std::string> BlacklistFileManager::readAllLines() const {
     }
     
     try {
-        return FileUtils::readAllLines(blacklistPath_);
+        return FileOperations::readAllLines(blacklistPath_);
     } catch (const std::exception& e) {
         throw std::runtime_error("Could not read blacklist file: " + blacklistPath_ + " - " + e.what());
     }
@@ -40,7 +42,7 @@ void BlacklistFileManager::writeAllLines(const std::vector<std::string>& lines) 
     ensureConfigDirectoryExists();
     
     try {
-        FileUtils::writeAllLines(blacklistPath_, lines);
+        FileOperations::writeAllLines(blacklistPath_, lines);
     } catch (const std::exception& e) {
         throw std::runtime_error("Could not write to blacklist file: " + blacklistPath_ + " - " + e.what());
     }
@@ -53,7 +55,7 @@ void BlacklistFileManager::appendLine(const std::string& line) const {
     ensureConfigDirectoryExists();
     
     try {
-        FileUtils::appendLine(blacklistPath_, line);
+        FileOperations::appendLine(blacklistPath_, line);
     } catch (const std::exception& e) {
         throw std::runtime_error("Could not append to blacklist file: " + blacklistPath_ + " - " + e.what());
     }
@@ -66,7 +68,7 @@ void BlacklistFileManager::ensureConfigDirectoryExists() const {
     std::string configDir = getConfigDirectory();
     
     try {
-        FileUtils::createDirectories(configDir);
+        DirectoryOperations::create(configDir);
     } catch (const std::exception& e) {
         throw std::runtime_error("Could not create config directory: " + configDir + " - " + e.what());
     }
@@ -87,7 +89,7 @@ bool BlacklistFileManager::canRead() const {
         return false;
     }
     
-    return FileUtils::canRead(blacklistPath_);
+    return FilePermissions::canRead(blacklistPath_);
 }
 
 /**
@@ -101,7 +103,7 @@ bool BlacklistFileManager::canWrite() const {
         return false;
     }
     
-    return FileUtils::canWrite(blacklistPath_);
+    return FilePermissions::canWrite(blacklistPath_);
 }
 
 /**

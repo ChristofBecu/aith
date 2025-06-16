@@ -7,7 +7,6 @@
 #include "benchmark_reporter.h"
 #include "system_utils.h"
 #include "string_utils.h"
-#include "file_utils.h"
 #include "provider_manager.h"
 #include "blacklist_manager.h"
 #include "http_client.h"

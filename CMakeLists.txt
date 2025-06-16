@@ -66,7 +66,6 @@ set(CHAT_SOURCES
 set(UTILS_SOURCES
     src/utils/system_utils.cpp
     src/utils/string_utils.cpp
-    src/utils/file_utils.cpp
     src/utils/file_operations.cpp
     src/utils/directory_operations.cpp
     src/utils/temp_file_manager.cpp

@@ -1,6 +1,7 @@
 #include "config_manager.h"
 #include "system_utils.h"
-#include "file_utils.h"
+#include "file_operations.h"
+#include "config_file_handler.h"
 #include <algorithm>
 
 /**
@@ -62,7 +63,7 @@ std::string ConfigManager::getProviderConfigValue(const std::string &provider, c
     
     // Try each possible config file path
     for (const auto& configPath : possibleConfigPaths) {
-        if (FileUtils::fileExists(configPath)) {
+        if (FileOperations::exists(configPath)) {
             std::string value = readConfigFile(configPath, key);
             if (!value.empty()) {
                 return value;
@@ -78,12 +79,12 @@ std::string ConfigManager::getProviderConfigValue(const std::string &provider, c
  * Reads a configuration value from a specific file.
  */
 std::string ConfigManager::readConfigFile(const std::string &configPath, const std::string &key) {
-    if (!FileUtils::fileExists(configPath)) {
+    if (!FileOperations::exists(configPath)) {
         return "";
     }
     
     try {
-        std::string value = FileUtils::readConfigValue(configPath, key);
+        std::string value = ConfigFileHandler::readValue(configPath, key);
         return removeQuotes(value);
     } catch (const std::exception&) {
         // If reading fails, return empty string (maintains existing behavior)
@@ -132,12 +133,12 @@ std::string ConfigManager::getDefaultPrompt() {
     std::string configDir = getConfigDir();
     std::string defaultPromptPath = configDir + "/defaultprompt";
     
-    if (!FileUtils::fileExists(defaultPromptPath)) {
+    if (!FileOperations::exists(defaultPromptPath)) {
         return "";
     }
     
     try {
-        return FileUtils::readFile(defaultPromptPath);
+        return FileOperations::read(defaultPromptPath);
     } catch (const std::exception&) {
         // If reading fails, return empty string (maintains existing behavior)
         return "";
