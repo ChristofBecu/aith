@@ -36,30 +36,15 @@
  * - Terminal-friendly colors that work well in both light/dark themes
  */
 
-// ANSI color code definitions
-const std::string TerminalMarkdownRenderer::RESET = "\033[0m";
-const std::string TerminalMarkdownRenderer::BOLD = "\033[1m";
-const std::string TerminalMarkdownRenderer::DIM = "\033[2m";
-const std::string TerminalMarkdownRenderer::UNDERLINE = "\033[4m";
-
-const std::string TerminalMarkdownRenderer::BLACK = "\033[30m";
-const std::string TerminalMarkdownRenderer::RED = "\033[31m";
-const std::string TerminalMarkdownRenderer::GREEN = "\033[32m";
-const std::string TerminalMarkdownRenderer::YELLOW = "\033[33m";
-const std::string TerminalMarkdownRenderer::BLUE = "\033[34m";
-const std::string TerminalMarkdownRenderer::MAGENTA = "\033[35m";
-const std::string TerminalMarkdownRenderer::CYAN = "\033[36m";
-const std::string TerminalMarkdownRenderer::WHITE = "\033[37m";
-
-const std::string TerminalMarkdownRenderer::BG_BLACK = "\033[40m";
-const std::string TerminalMarkdownRenderer::BG_GRAY = "\033[100m";
+// Use common components
+using namespace markdown;
 
 /**
  * Renders markdown text to ANSI-formatted terminal output.
  */
 std::string TerminalMarkdownRenderer::render(const std::string& markdown) {
     // First decode JSON escapes and Unicode HTML entities
-    std::string decodedMarkdown = decodeJsonAndUnicodeEscapes(markdown);
+    std::string decodedMarkdown = TextUtils::decodeJsonAndUnicodeEscapes(markdown);
     
     RenderState state;
     
@@ -96,7 +81,7 @@ int TerminalMarkdownRenderer::enterBlockCallback(MD_BLOCKTYPE blockType, void* d
     switch (blockType) {
         case MD_BLOCK_H: {
             auto* headerDetail = static_cast<MD_BLOCK_H_DETAIL*>(detail);
-            state->output += getHeaderColor(headerDetail->level) + BOLD;
+            state->output += AnsiColors::getHeaderColor(headerDetail->level) + AnsiColors::BOLD;
             break;
         }
         case MD_BLOCK_P:
@@ -110,7 +95,7 @@ int TerminalMarkdownRenderer::enterBlockCallback(MD_BLOCKTYPE blockType, void* d
             addIndentation(*state);
             if (codeDetail->lang.text != nullptr) {
                 std::string lang(codeDetail->lang.text, codeDetail->lang.size);
-                state->output += GREEN + "(" + lang + ")" + RESET + "\n";
+                state->output += AnsiColors::GREEN + "(" + lang + ")" + AnsiColors::RESET + "\n";
                 addIndentation(*state);
             }
             break;
@@ -145,11 +130,11 @@ int TerminalMarkdownRenderer::enterBlockCallback(MD_BLOCKTYPE blockType, void* d
                     state->isOrderedList[currentLevel]) {
                     // Ordered list - show number
                     int itemNumber = state->listItemCount[currentLevel];
-                    state->output += DIM + WHITE + std::to_string(itemNumber) + ". " + RESET;
+                    state->output += AnsiColors::DIM + AnsiColors::WHITE + std::to_string(itemNumber) + ". " + AnsiColors::RESET;
                     state->listItemCount[currentLevel]++;
                 } else {
                     // Unordered list - show bullet
-                    state->output += DIM + WHITE + "• " + RESET;
+                    state->output += AnsiColors::DIM + AnsiColors::WHITE + "• " + AnsiColors::RESET;
                 }
             }
             break;
@@ -161,7 +146,7 @@ int TerminalMarkdownRenderer::enterBlockCallback(MD_BLOCKTYPE blockType, void* d
         case MD_BLOCK_HR:
             state->output += "\n";
             addIndentation(*state);
-            state->output += DIM + WHITE + "────────────────────────────────────────" + RESET + "\n";
+            state->output += AnsiColors::DIM + AnsiColors::WHITE + "────────────────────────────────────────" + AnsiColors::RESET + "\n";
             break;
         case MD_BLOCK_TABLE:
             state->output += "\n";
@@ -201,14 +186,14 @@ int TerminalMarkdownRenderer::leaveBlockCallback(MD_BLOCKTYPE blockType, void* d
     
     switch (blockType) {
         case MD_BLOCK_H:
-            state->output += RESET + "\n\n";
+            state->output += AnsiColors::RESET + "\n\n";
             break;
         case MD_BLOCK_P:
             state->output += "\n\n";
             break;
         case MD_BLOCK_CODE:
             state->inCodeBlock = false;
-            state->output += RESET + "\n\n";
+            state->output += AnsiColors::RESET + "\n\n";
             break;
         case MD_BLOCK_UL:
         case MD_BLOCK_OL:
@@ -264,21 +249,21 @@ int TerminalMarkdownRenderer::enterSpanCallback(MD_SPANTYPE spanType, void* deta
     
     switch (spanType) {
         case MD_SPAN_EM:
-            state->output += DIM;
+            state->output += AnsiColors::DIM;
             break;
         case MD_SPAN_STRONG:
-            state->output += BOLD;
+            state->output += AnsiColors::BOLD;
             break;
         case MD_SPAN_CODE:
-            state->output += DIM + CYAN;
+            state->output += AnsiColors::DIM + AnsiColors::CYAN;
             break;
         case MD_SPAN_A: {
             auto* linkDetail = static_cast<MD_SPAN_A_DETAIL*>(detail);
-            state->output += BLUE + UNDERLINE;
+            state->output += AnsiColors::BLUE + AnsiColors::UNDERLINE;
             break;
         }
         case MD_SPAN_DEL:
-            state->output += DIM;
+            state->output += AnsiColors::DIM;
             break;
     }
     
@@ -297,7 +282,7 @@ int TerminalMarkdownRenderer::leaveSpanCallback(MD_SPANTYPE spanType, void* deta
         case MD_SPAN_CODE:
         case MD_SPAN_A:
         case MD_SPAN_DEL:
-            state->output += RESET;
+            state->output += AnsiColors::RESET;
             break;
     }
     
@@ -320,7 +305,7 @@ int TerminalMarkdownRenderer::textCallback(MD_TEXTTYPE textType, const MD_CHAR* 
                 // Capture text content for table cells
                 state->currentTable->currentCellContent += textStr;
             } else {
-                state->output += escapeAnsiSequences(textStr);
+                state->output += AnsiColors::escapeAnsiSequences(textStr);
             }
             break;
         case MD_TEXT_NULLCHAR:
@@ -361,171 +346,18 @@ void TerminalMarkdownRenderer::addIndentation(RenderState& state) {
  */
 void TerminalMarkdownRenderer::addBlockquotePrefixes(RenderState& state) {
     for (int i = 0; i < state.blockquoteLevel; i++) {
-        state.output += DIM + WHITE + "│ " + RESET;
-    }
-}
-
-/**
- * Returns appropriate color for header level with hierarchical intensity
- * H1 (brightest) -> H6 (dimmest) for clear visual hierarchy
- */
-std::string TerminalMarkdownRenderer::getHeaderColor(int level) {
-    switch (level) {
-        case 1: return WHITE;             // H1: Bright white + bold (from caller)
-        case 2: return WHITE;             // H2: White + bold (from caller)
-        case 3: return YELLOW;            // H3: Yellow + bold (from caller)
-        case 4: return GREEN;             // H4: Green + bold (from caller)
-        case 5: return CYAN;              // H5: Cyan + bold (from caller)
-        case 6: return DIM + WHITE;       // H6: Dimmed white + bold (from caller)
-        default: return WHITE;
+        state.output += AnsiColors::DIM + AnsiColors::WHITE + "│ " + AnsiColors::RESET;
     }
 }
 
 /**
  * Escapes any existing ANSI sequences in text to prevent conflicts
  */
-std::string TerminalMarkdownRenderer::escapeAnsiSequences(const std::string& text) {
-    // For now, just return the text as-is
-    // In a more robust implementation, we might escape existing ANSI codes
-    return text;
-}
 
-/**
- * Decodes JSON escape sequences and Unicode HTML entities in the input text.
- * This handles strings that come from JSON-encoded markdown content.
- */
-std::string TerminalMarkdownRenderer::decodeJsonAndUnicodeEscapes(const std::string& text) {
-    std::string result;
-    result.reserve(text.length());
-    
-    for (size_t i = 0; i < text.length(); ++i) {
-        if (text[i] == '\\' && i + 1 < text.length()) {
-            char next = text[i + 1];
-            switch (next) {
-                case 'n':
-                    result += '\n';
-                    ++i; // Skip the next character
-                    break;
-                case 't':
-                    result += '\t';
-                    ++i;
-                    break;
-                case 'r':
-                    result += '\r';
-                    ++i;
-                    break;
-                case '\\':
-                    result += '\\';
-                    ++i;
-                    break;
-                case '"':
-                    result += '"';
-                    ++i;
-                    break;
-                case '/':
-                    result += '/';
-                    ++i;
-                    break;
-                case 'u':
-                    // Handle Unicode escape sequences like \u003c, \u003e
-                    if (i + 5 < text.length()) {
-                        std::string hexCode = text.substr(i + 2, 4);
-                        try {
-                            // Convert hex string to integer
-                            unsigned int codePoint = std::stoul(hexCode, nullptr, 16);
-                            
-                            // Convert common HTML entities to their ASCII equivalents
-                            switch (codePoint) {
-                                case 0x003c: // \u003c -> <
-                                    result += '<';
-                                    break;
-                                case 0x003e: // \u003e -> >
-                                    result += '>';
-                                    break;
-                                case 0x0026: // \u0026 -> &
-                                    result += '&';
-                                    break;
-                                case 0x0022: // \u0022 -> "
-                                    result += '"';
-                                    break;
-                                case 0x0027: // \u0027 -> '
-                                    result += '\'';
-                                    break;
-                                default:
-                                    // For other Unicode characters, convert to UTF-8
-                                    if (codePoint <= 0x7F) {
-                                        // ASCII range
-                                        result += static_cast<char>(codePoint);
-                                    } else if (codePoint <= 0x7FF) {
-                                        // 2-byte UTF-8
-                                        result += static_cast<char>(0xC0 | (codePoint >> 6));
-                                        result += static_cast<char>(0x80 | (codePoint & 0x3F));
-                                    } else {
-                                        // 3-byte UTF-8 (sufficient for \uXXXX range)
-                                        result += static_cast<char>(0xE0 | (codePoint >> 12));
-                                        result += static_cast<char>(0x80 | ((codePoint >> 6) & 0x3F));
-                                        result += static_cast<char>(0x80 | (codePoint & 0x3F));
-                                    }
-                                    break;
-                            }
-                            i += 5; // Skip \uXXXX
-                        } catch (const std::exception&) {
-                            // If parsing fails, keep the original sequence
-                            result += text[i];
-                        }
-                    } else {
-                        // Not enough characters for a valid \uXXXX sequence
-                        result += text[i];
-                    }
-                    break;
-                default:
-                    // Unknown escape sequence, keep both characters
-                    result += text[i];
-                    result += next;
-                    ++i;
-                    break;
-            }
-        } else {
-            result += text[i];
-        }
-    }
-    
-    return result;
-}
 
 /**
  * Gets the display width of text (handles basic UTF-8)
  */
-size_t TerminalMarkdownRenderer::getDisplayWidth(const std::string& text) {
-    // Simple implementation - count characters, not bytes
-    // This is a basic version; a full implementation would handle Unicode properly
-    size_t width = 0;
-    for (size_t i = 0; i < text.length(); ) {
-        unsigned char c = text[i];
-        if (c < 0x80) {
-            // ASCII character
-            width++;
-            i++;
-        } else if ((c & 0xE0) == 0xC0) {
-            // 2-byte UTF-8
-            width++;
-            i += 2;
-        } else if ((c & 0xF0) == 0xE0) {
-            // 3-byte UTF-8
-            width++;
-            i += 3;
-        } else if ((c & 0xF8) == 0xF0) {
-            // 4-byte UTF-8
-            width++;
-            i += 4;
-        } else {
-            // Invalid UTF-8, skip
-            i++;
-        }
-    }
-    return width;
-}
-
 /**
  * Calculates optimal column widths for the table
  */
@@ -543,7 +375,7 @@ void TerminalMarkdownRenderer::calculateColumnWidths(TableState& table) {
     // Find maximum width for each column
     for (const auto& row : table.rows) {
         for (size_t col = 0; col < row.size() && col < maxCols; col++) {
-            size_t cellWidth = getDisplayWidth(row[col]);
+            size_t cellWidth = TextUtils::getDisplayWidth(row[col]);
             table.columnWidths[col] = std::max(table.columnWidths[col], cellWidth);
         }
     }
@@ -551,25 +383,6 @@ void TerminalMarkdownRenderer::calculateColumnWidths(TableState& table) {
     // Add padding (2 spaces per side)
     for (auto& width : table.columnWidths) {
         width += 2;
-    }
-}
-
-/**
- * Pads cell content to specified width
- */
-std::string TerminalMarkdownRenderer::padCell(const std::string& content, size_t width, bool isHeader) {
-    size_t contentWidth = getDisplayWidth(content);
-    size_t padding = (width > contentWidth) ? width - contentWidth : 0;
-    
-    std::string result = " " + content;
-    for (size_t i = 0; i < padding - 1; i++) {
-        result += " ";
-    }
-    
-    if (isHeader) {
-        return BOLD + WHITE + result + RESET;
-    } else {
-        return result;
     }
 }
 
@@ -585,7 +398,7 @@ void TerminalMarkdownRenderer::renderTable(RenderState& state) {
     addIndentation(state);
     
     // Top border
-    state.output += DIM + WHITE + "┌";
+    state.output += AnsiColors::DIM + AnsiColors::WHITE + "┌";
     for (size_t col = 0; col < table.columnWidths.size(); col++) {
         for (size_t i = 0; i < table.columnWidths[col]; i++) {
             state.output += "─";
@@ -594,7 +407,7 @@ void TerminalMarkdownRenderer::renderTable(RenderState& state) {
             state.output += "┬";
         }
     }
-    state.output += "┐" + RESET + "\n";
+    state.output += "┐" + AnsiColors::RESET + "\n";
     
     // Render rows
     bool isFirstRow = true;
@@ -602,12 +415,12 @@ void TerminalMarkdownRenderer::renderTable(RenderState& state) {
         // Row content
         addBlockquotePrefixes(state);
         addIndentation(state);
-        state.output += DIM + WHITE + "│" + RESET;
+        state.output += AnsiColors::DIM + AnsiColors::WHITE + "│" + AnsiColors::RESET;
         
         for (size_t col = 0; col < table.columnWidths.size(); col++) {
             std::string cellContent = (col < row.size()) ? row[col] : "";
-            state.output += padCell(cellContent, table.columnWidths[col], isFirstRow);
-            state.output += DIM + WHITE + "│" + RESET;
+            state.output += TextUtils::padCell(cellContent, table.columnWidths[col], isFirstRow);
+            state.output += AnsiColors::DIM + AnsiColors::WHITE + "│" + AnsiColors::RESET;
         }
         state.output += "\n";
         
@@ -615,7 +428,7 @@ void TerminalMarkdownRenderer::renderTable(RenderState& state) {
         if (isFirstRow && table.rows.size() > 1) {
             addBlockquotePrefixes(state);
             addIndentation(state);
-            state.output += DIM + WHITE + "├";
+            state.output += AnsiColors::DIM + AnsiColors::WHITE + "├";
             for (size_t col = 0; col < table.columnWidths.size(); col++) {
                 for (size_t i = 0; i < table.columnWidths[col]; i++) {
                     state.output += "─";
@@ -624,7 +437,7 @@ void TerminalMarkdownRenderer::renderTable(RenderState& state) {
                     state.output += "┼";
                 }
             }
-            state.output += "┤" + RESET + "\n";
+            state.output += "┤" + AnsiColors::RESET + "\n";
         }
         
         isFirstRow = false;
@@ -633,7 +446,7 @@ void TerminalMarkdownRenderer::renderTable(RenderState& state) {
     // Bottom border
     addBlockquotePrefixes(state);
     addIndentation(state);
-    state.output += DIM + WHITE + "└";
+    state.output += AnsiColors::DIM + AnsiColors::WHITE + "└";
     for (size_t col = 0; col < table.columnWidths.size(); col++) {
         for (size_t i = 0; i < table.columnWidths[col]; i++) {
             state.output += "─";
@@ -642,5 +455,5 @@ void TerminalMarkdownRenderer::renderTable(RenderState& state) {
             state.output += "┴";
         }
     }
-    state.output += "┘" + RESET + "\n";
+    state.output += "┘" + AnsiColors::RESET + "\n";
 }

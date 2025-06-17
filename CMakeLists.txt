@@ -65,6 +65,8 @@ set(CHAT_SOURCES
 set(MARKDOWN_SOURCES
     src/markdown/markdown.cpp
     src/markdown/terminal_markdown_renderer.cpp
+    src/markdown/common/ansi_colors.cpp
+    src/markdown/common/text_utils.cpp
 )
 
 set(UTILS_SOURCES
