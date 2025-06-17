@@ -65,7 +65,7 @@ int TableBlockHandler::leaveBlock(MD_BLOCKTYPE blockType, void* detail, RenderSt
                 renderTable(state);
                 state.currentTable.reset();
             }
-            state.output += "\n";
+            // Trailing spacing now handled by BlockHandlerFactory
             break;
             
         case MD_BLOCK_THEAD:

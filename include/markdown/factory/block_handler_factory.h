@@ -39,6 +39,7 @@ private:
     
     void initializeHandlers();
     const BlockHandler* findHandler(MD_BLOCKTYPE blockType) const;
+    void addTrailingSpacing(MD_BLOCKTYPE blockType, RenderState& state) const;
 };
 
 } // namespace markdown

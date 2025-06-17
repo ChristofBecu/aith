@@ -20,7 +20,7 @@ int HeaderBlockHandler::enterBlock(MD_BLOCKTYPE blockType, void* detail, RenderS
 int HeaderBlockHandler::leaveBlock(MD_BLOCKTYPE blockType, void* detail, RenderState& state) const {
     if (!canHandle(blockType)) return 0;
     
-    state.output += AnsiColors::RESET + "\n\n";
+    state.output += AnsiColors::RESET;
     
     return 0;
 }

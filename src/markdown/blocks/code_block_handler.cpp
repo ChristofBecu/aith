@@ -33,7 +33,7 @@ int CodeBlockHandler::leaveBlock(MD_BLOCKTYPE blockType, void* detail, RenderSta
     if (!canHandle(blockType)) return 0;
     
     state.inCodeBlock = false;
-    state.output += AnsiColors::RESET + "\n\n";
+    state.output += AnsiColors::RESET;
     
     return 0;
 }

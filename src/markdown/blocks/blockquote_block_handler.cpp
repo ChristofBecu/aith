@@ -20,7 +20,7 @@ int BlockquoteBlockHandler::leaveBlock(MD_BLOCKTYPE blockType, void* detail, Ren
     if (!canHandle(blockType)) return 0;
     
     state.blockquoteLevel--;
-    state.output += "\n";
+    // Trailing spacing now handled by BlockHandlerFactory
     
     return 0;
 }

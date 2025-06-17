@@ -20,7 +20,7 @@ int ParagraphBlockHandler::enterBlock(MD_BLOCKTYPE blockType, void* detail, Rend
 int ParagraphBlockHandler::leaveBlock(MD_BLOCKTYPE blockType, void* detail, RenderState& state) const {
     if (!canHandle(blockType)) return 0;
     
-    state.output += "\n\n";
+    // No trailing spacing - handled by BlockHandlerFactory
     
     return 0;
 }

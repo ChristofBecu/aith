@@ -54,14 +54,7 @@ int ListBlockHandler::leaveBlock(MD_BLOCKTYPE blockType, void* detail, RenderSta
             if (static_cast<int>(state.listItemCount.size()) > state.listLevel) {
                 state.listItemCount.resize(state.listLevel);
             }
-            // Add extra spacing after list ends to ensure proper separation from next block
-            if (state.listLevel == 0) {
-                // This is the end of the outermost list, add extra spacing
-                state.output += "\n\n";
-            } else {
-                // This is a nested list ending, just add one newline
-                state.output += "\n";
-            }
+            // Trailing spacing now handled by BlockHandlerFactory
             break;
             
         case MD_BLOCK_LI:
