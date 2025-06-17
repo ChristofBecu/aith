@@ -8,6 +8,7 @@
 #include "markdown/common/render_state.h"
 #include "markdown/common/ansi_colors.h"
 #include "markdown/common/text_utils.h"
+#include "markdown/factory/block_handler_factory.h"
 
 /**
  * @brief C++ markdown renderer for terminal output with ANSI colors.
@@ -15,9 +16,17 @@
  * This class replaces the external mdcat dependency by providing
  * native C++ markdown rendering using the md4c library with custom
  * ANSI terminal formatting for better readability.
+ * 
+ * The renderer uses a modular design with separate block handlers
+ * for different markdown elements, managed through a factory pattern.
  */
 class TerminalMarkdownRenderer {
 public:
+    /**
+     * @brief Constructor initializes the block handler factory
+     */
+    TerminalMarkdownRenderer();
+    
     /**
      * @brief Renders markdown text to ANSI-formatted terminal output.
      * @param markdown The markdown text to render
@@ -30,6 +39,9 @@ private:
     using RenderState = markdown::RenderState;
     using TableState = markdown::TableState;
     
+    // Block handler factory for delegating block processing
+    markdown::BlockHandlerFactory blockHandlerFactory;
+    
     // Static callback functions for md4c parser
     static int enterBlockCallback(MD_BLOCKTYPE blockType, void* detail, void* userdata);
     static int leaveBlockCallback(MD_BLOCKTYPE blockType, void* detail, void* userdata);
@@ -40,10 +52,6 @@ private:
     // Static helper methods for formatting (since callbacks are static)
     static void addIndentation(RenderState& state);
     static void addBlockquotePrefixes(RenderState& state);
-    
-    // Table rendering helpers
-    static void calculateColumnWidths(TableState& table);
-    static void renderTable(RenderState& state);
 };
 
 #endif // TERMINAL_MARKDOWN_RENDERER_H

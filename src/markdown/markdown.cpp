@@ -9,7 +9,6 @@
  * @param markdown The Markdown string to render.
  */
 void renderMarkdown(const std::string &markdown) {
-    std::cout << markdown << std::endl << std::flush;
     TerminalMarkdownRenderer renderer;
     std::string rendered = renderer.render(markdown);
     std::cout << rendered << std::flush;

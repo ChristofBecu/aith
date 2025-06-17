@@ -40,6 +40,13 @@
 using namespace markdown;
 
 /**
+ * Constructor initializes the block handler factory
+ */
+TerminalMarkdownRenderer::TerminalMarkdownRenderer() {
+    // Factory is initialized automatically
+}
+
+/**
  * Renders markdown text to ANSI-formatted terminal output.
  */
 std::string TerminalMarkdownRenderer::render(const std::string& markdown) {
@@ -47,6 +54,7 @@ std::string TerminalMarkdownRenderer::render(const std::string& markdown) {
     std::string decodedMarkdown = TextUtils::decodeJsonAndUnicodeEscapes(markdown);
     
     RenderState state;
+    state.blockHandlerFactory = &blockHandlerFactory;
     
     // Configure md4c parser
     MD_PARSER parser = {
@@ -78,103 +86,12 @@ std::string TerminalMarkdownRenderer::render(const std::string& markdown) {
 int TerminalMarkdownRenderer::enterBlockCallback(MD_BLOCKTYPE blockType, void* detail, void* userdata) {
     auto* state = static_cast<RenderState*>(userdata);
     
-    switch (blockType) {
-        case MD_BLOCK_H: {
-            auto* headerDetail = static_cast<MD_BLOCK_H_DETAIL*>(detail);
-            state->output += AnsiColors::getHeaderColor(headerDetail->level) + AnsiColors::BOLD;
-            break;
-        }
-        case MD_BLOCK_P:
-            addBlockquotePrefixes(*state);
-            addIndentation(*state);
-            break;
-        case MD_BLOCK_CODE: {
-            auto* codeDetail = static_cast<MD_BLOCK_CODE_DETAIL*>(detail);
-            state->inCodeBlock = true;
-            state->output += "\n";
-            addIndentation(*state);
-            if (codeDetail->lang.text != nullptr) {
-                std::string lang(codeDetail->lang.text, codeDetail->lang.size);
-                state->output += AnsiColors::GREEN + "(" + lang + ")" + AnsiColors::RESET + "\n";
-                addIndentation(*state);
-            }
-            break;
-        }
-        case MD_BLOCK_UL:
-            state->inList = true;
-            state->listLevel++;
-            state->isOrderedList.resize(state->listLevel, false);
-            state->listItemCount.resize(state->listLevel, 0);
-            state->isOrderedList[state->listLevel - 1] = false;
-            break;
-        case MD_BLOCK_OL: {
-            auto* olDetail = static_cast<MD_BLOCK_OL_DETAIL*>(detail);
-            state->inList = true;
-            state->listLevel++;
-            state->isOrderedList.resize(state->listLevel, false);
-            state->listItemCount.resize(state->listLevel, 0);
-            state->isOrderedList[state->listLevel - 1] = true;
-            state->listItemCount[state->listLevel - 1] = olDetail ? olDetail->start : 1;
-            break;
-        }
-        case MD_BLOCK_LI: {
-            state->output += "\n";
-            addIndentation(*state);
-            for (int i = 0; i < state->listLevel - 1; i++) {
-                state->output += "  ";
-            }
-            
-            if (state->inList && state->listLevel > 0) {
-                int currentLevel = state->listLevel - 1;
-                if (currentLevel < static_cast<int>(state->isOrderedList.size()) && 
-                    state->isOrderedList[currentLevel]) {
-                    // Ordered list - show number
-                    int itemNumber = state->listItemCount[currentLevel];
-                    state->output += AnsiColors::DIM + AnsiColors::WHITE + std::to_string(itemNumber) + ". " + AnsiColors::RESET;
-                    state->listItemCount[currentLevel]++;
-                } else {
-                    // Unordered list - show bullet
-                    state->output += AnsiColors::DIM + AnsiColors::WHITE + "• " + AnsiColors::RESET;
-                }
-            }
-            break;
-        }
-        case MD_BLOCK_QUOTE:
-            state->output += "\n";
-            state->blockquoteLevel++;
-            break;
-        case MD_BLOCK_HR:
-            state->output += "\n";
-            addIndentation(*state);
-            state->output += AnsiColors::DIM + AnsiColors::WHITE + "────────────────────────────────────────" + AnsiColors::RESET + "\n";
-            break;
-        case MD_BLOCK_TABLE:
-            state->output += "\n";
-            state->currentTable = std::make_unique<TableState>();
-            break;
-        case MD_BLOCK_THEAD:
-            if (state->currentTable) {
-                state->currentTable->isHeader = true;
-            }
-            break;
-        case MD_BLOCK_TBODY:
-            if (state->currentTable) {
-                state->currentTable->isHeader = false;
-            }
-            break;
-        case MD_BLOCK_TR:
-            if (state->currentTable) {
-                state->currentTable->startNewRow();
-            }
-            break;
-        case MD_BLOCK_TD:
-        case MD_BLOCK_TH:
-            if (state->currentTable) {
-                state->currentTable->currentCellContent.clear();
-            }
-            break;
+    // Delegate to the factory if available
+    if (state->blockHandlerFactory) {
+        return state->blockHandlerFactory->handleEnterBlock(blockType, detail, *state);
     }
     
+    // Fallback for any blocks not handled by the factory (shouldn't happen)
     return 0;
 }
 
@@ -184,60 +101,12 @@ int TerminalMarkdownRenderer::enterBlockCallback(MD_BLOCKTYPE blockType, void* d
 int TerminalMarkdownRenderer::leaveBlockCallback(MD_BLOCKTYPE blockType, void* detail, void* userdata) {
     auto* state = static_cast<RenderState*>(userdata);
     
-    switch (blockType) {
-        case MD_BLOCK_H:
-            state->output += AnsiColors::RESET + "\n\n";
-            break;
-        case MD_BLOCK_P:
-            state->output += "\n\n";
-            break;
-        case MD_BLOCK_CODE:
-            state->inCodeBlock = false;
-            state->output += AnsiColors::RESET + "\n\n";
-            break;
-        case MD_BLOCK_UL:
-        case MD_BLOCK_OL:
-            state->inList = (state->listLevel > 1);
-            state->listLevel--;
-            if (static_cast<int>(state->isOrderedList.size()) > state->listLevel) {
-                state->isOrderedList.resize(state->listLevel);
-            }
-            if (static_cast<int>(state->listItemCount.size()) > state->listLevel) {
-                state->listItemCount.resize(state->listLevel);
-            }
-            // Add proper spacing after list ends (two newlines for consistent paragraph separation)
-            state->output += "\n\n";
-            break;
-        case MD_BLOCK_LI:
-            break;
-        case MD_BLOCK_QUOTE:
-            state->blockquoteLevel--;
-            state->output += "\n";
-            break;
-        case MD_BLOCK_TABLE:
-            if (state->currentTable) {
-                state->currentTable->finalize();
-                calculateColumnWidths(*state->currentTable);
-                renderTable(*state);
-                state->currentTable.reset();
-            }
-            state->output += "\n";
-            break;
-        case MD_BLOCK_THEAD:
-        case MD_BLOCK_TBODY:
-            // No specific action needed
-            break;
-        case MD_BLOCK_TR:
-            // Row end handled in table state
-            break;
-        case MD_BLOCK_TD:
-        case MD_BLOCK_TH:
-            if (state->currentTable) {
-                state->currentTable->addCell(state->currentTable->currentCellContent);
-            }
-            break;
+    // Delegate to the factory if available
+    if (state->blockHandlerFactory) {
+        return state->blockHandlerFactory->handleLeaveBlock(blockType, detail, *state);
     }
     
+    // Fallback for any blocks not handled by the factory (shouldn't happen)
     return 0;
 }
 
@@ -348,112 +217,4 @@ void TerminalMarkdownRenderer::addBlockquotePrefixes(RenderState& state) {
     for (int i = 0; i < state.blockquoteLevel; i++) {
         state.output += AnsiColors::DIM + AnsiColors::WHITE + "│ " + AnsiColors::RESET;
     }
-}
-
-/**
- * Escapes any existing ANSI sequences in text to prevent conflicts
- */
-
-
-/**
- * Gets the display width of text (handles basic UTF-8)
- */
-/**
- * Calculates optimal column widths for the table
- */
-void TerminalMarkdownRenderer::calculateColumnWidths(TableState& table) {
-    if (table.rows.empty()) return;
-    
-    // Determine number of columns
-    size_t maxCols = 0;
-    for (const auto& row : table.rows) {
-        maxCols = std::max(maxCols, row.size());
-    }
-    
-    table.columnWidths.resize(maxCols, 0);
-    
-    // Find maximum width for each column
-    for (const auto& row : table.rows) {
-        for (size_t col = 0; col < row.size() && col < maxCols; col++) {
-            size_t cellWidth = TextUtils::getDisplayWidth(row[col]);
-            table.columnWidths[col] = std::max(table.columnWidths[col], cellWidth);
-        }
-    }
-    
-    // Add padding (2 spaces per side)
-    for (auto& width : table.columnWidths) {
-        width += 2;
-    }
-}
-
-/**
- * Renders the complete table with box drawing characters
- */
-void TerminalMarkdownRenderer::renderTable(RenderState& state) {
-    if (!state.currentTable || state.currentTable->rows.empty()) return;
-    
-    TableState& table = *state.currentTable;
-    
-    addBlockquotePrefixes(state);
-    addIndentation(state);
-    
-    // Top border
-    state.output += AnsiColors::DIM + AnsiColors::WHITE + "┌";
-    for (size_t col = 0; col < table.columnWidths.size(); col++) {
-        for (size_t i = 0; i < table.columnWidths[col]; i++) {
-            state.output += "─";
-        }
-        if (col < table.columnWidths.size() - 1) {
-            state.output += "┬";
-        }
-    }
-    state.output += "┐" + AnsiColors::RESET + "\n";
-    
-    // Render rows
-    bool isFirstRow = true;
-    for (const auto& row : table.rows) {
-        // Row content
-        addBlockquotePrefixes(state);
-        addIndentation(state);
-        state.output += AnsiColors::DIM + AnsiColors::WHITE + "│" + AnsiColors::RESET;
-        
-        for (size_t col = 0; col < table.columnWidths.size(); col++) {
-            std::string cellContent = (col < row.size()) ? row[col] : "";
-            state.output += TextUtils::padCell(cellContent, table.columnWidths[col], isFirstRow);
-            state.output += AnsiColors::DIM + AnsiColors::WHITE + "│" + AnsiColors::RESET;
-        }
-        state.output += "\n";
-        
-        // Separator after header row
-        if (isFirstRow && table.rows.size() > 1) {
-            addBlockquotePrefixes(state);
-            addIndentation(state);
-            state.output += AnsiColors::DIM + AnsiColors::WHITE + "├";
-            for (size_t col = 0; col < table.columnWidths.size(); col++) {
-                for (size_t i = 0; i < table.columnWidths[col]; i++) {
-                    state.output += "─";
-                }
-                if (col < table.columnWidths.size() - 1) {
-                    state.output += "┼";
-                }
-            }
-            state.output += "┤" + AnsiColors::RESET + "\n";
-        }
-        
-        isFirstRow = false;
-    }
-    
-    // Bottom border
-    addBlockquotePrefixes(state);
-    addIndentation(state);
-    state.output += AnsiColors::DIM + AnsiColors::WHITE + "└";
-    for (size_t col = 0; col < table.columnWidths.size(); col++) {
-        for (size_t i = 0; i < table.columnWidths[col]; i++) {
-            state.output += "─";
-        }
-        if (col < table.columnWidths.size() - 1) {
-            state.output += "┴";
-        }
-    }
-    state.output += "┘" + AnsiColors::RESET + "\n";
 }

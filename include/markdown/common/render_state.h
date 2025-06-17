@@ -7,6 +7,9 @@
 
 namespace markdown {
 
+// Forward declaration
+class BlockHandlerFactory;
+
 /**
  * @brief State for tracking table rendering and content.
  * 
@@ -75,8 +78,12 @@ struct RenderState {
     int blockquoteLevel;                           // Track blockquote nesting level
     std::unique_ptr<TableState> currentTable;     // Current table being processed
     
+    // Forward declaration for factory
+    BlockHandlerFactory* blockHandlerFactory; // Pointer to block handler factory
+    
     RenderState() : indentLevel(0), inCodeBlock(false), inList(false), 
-                   listLevel(0), inTableHeader(false), blockquoteLevel(0) {}
+                   listLevel(0), inTableHeader(false), blockquoteLevel(0),
+                   blockHandlerFactory(nullptr) {}
 };
 
 } // namespace markdown
