@@ -1,5 +1,5 @@
-#include "markdown.h"
-#include "markdown_renderer.h"
+#include "markdown/markdown.h"
+#include "markdown/terminal_markdown_renderer.h"
 #include <iostream>
 
 // Documentation added for functions and classes in this file.

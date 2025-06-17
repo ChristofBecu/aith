@@ -1,5 +1,5 @@
-#ifndef MARKDOWN_RENDERER_H
-#define MARKDOWN_RENDERER_H
+#ifndef TERMINAL_MARKDOWN_RENDERER_H
+#define TERMINAL_MARKDOWN_RENDERER_H
 
 #include <string>
 #include <vector>
@@ -113,4 +113,4 @@ private:
     static std::string padCell(const std::string& content, size_t width, bool isHeader = false);
 };
 
-#endif // MARKDOWN_RENDERER_H
+#endif // TERMINAL_MARKDOWN_RENDERER_H

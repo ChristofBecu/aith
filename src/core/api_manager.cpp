@@ -13,7 +13,7 @@
 #include <sstream>
 #include <ctime>
 #include <filesystem>
-#include "markdown.h"
+#include "markdown/markdown.h"
 #include "history.h"
 
 /**

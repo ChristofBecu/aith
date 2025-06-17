@@ -60,8 +60,11 @@ set(BENCHMARK_SOURCES
 
 set(CHAT_SOURCES
     src/chat/history.cpp
-    src/chat/markdown.cpp
-    src/chat/markdown_renderer.cpp
+)
+
+set(MARKDOWN_SOURCES
+    src/markdown/markdown.cpp
+    src/markdown/terminal_markdown_renderer.cpp
 )
 
 set(UTILS_SOURCES
@@ -93,6 +96,7 @@ set(ALL_SOURCES
     ${API_SOURCES}
     ${BENCHMARK_SOURCES}
     ${CHAT_SOURCES}
+    ${MARKDOWN_SOURCES}
     ${UTILS_SOURCES}
     ${COMMANDS_SOURCES}
 )

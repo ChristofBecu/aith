@@ -1,4 +1,4 @@
-#include "chat/markdown_renderer.h"
+#include "markdown/terminal_markdown_renderer.h"
 #include <md4c.h>
 #include <iostream>
 #include <sstream>
