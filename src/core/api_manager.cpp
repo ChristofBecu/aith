@@ -74,6 +74,7 @@ void ApiManager::chat(const std::string &prompt, const std::string &model, const
 
     // Load and build chat history with system prompt
     Json::Value history = loadChatHistory(currentHistory);
+
     history = buildChatHistoryWithSystem(history, defaultPrompt);
 
     // Create and send chat request
@@ -92,6 +93,7 @@ void ApiManager::chat(const std::string &prompt, const std::string &model, const
     }
 
     // Display and save response
-    renderMarkdown(response.getContent());
-    addToHistory("assistant", response.getContent(), currentHistory);
+    std::string content = response.getContent();
+    renderMarkdown(content);
+    addToHistory("assistant", content, currentHistory);
 }

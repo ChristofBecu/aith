@@ -2,6 +2,8 @@
 #define MARKDOWN_RENDERER_H
 
 #include <string>
+#include <vector>
+#include <memory>
 #include "md4c.h"
 
 /**
@@ -44,14 +46,50 @@ private:
     /**
      * @brief Internal renderer state for tracking output formatting.
      */
+    struct TableState {
+        std::vector<std::vector<std::string>> rows;
+        std::vector<size_t> columnWidths;
+        std::vector<std::string> currentRow;
+        std::string currentCellContent;
+        bool isHeader;
+        size_t currentCol;
+        
+        TableState() : isHeader(false), currentCol(0) {}
+        
+        void startNewRow() {
+            if (!currentRow.empty()) {
+                rows.push_back(currentRow);
+                currentRow.clear();
+            }
+            currentCol = 0;
+        }
+        
+        void addCell(const std::string& content) {
+            currentRow.push_back(content);
+            currentCol++;
+        }
+        
+        void finalize() {
+            if (!currentRow.empty()) {
+                rows.push_back(currentRow);
+            }
+        }
+    };
+
     struct RenderState {
         std::string output;
         int indentLevel;
         bool inCodeBlock;
         bool inList;
         int listLevel;
+        std::vector<bool> isOrderedList;  // Track if each list level is ordered
+        std::vector<int> listItemCount;   // Track current item number for ordered lists
+        bool inTableHeader;               // Track if we're in a table header
+        int blockquoteLevel;              // Track blockquote nesting level
+        std::unique_ptr<TableState> currentTable;  // Current table being processed
         
-        RenderState() : indentLevel(0), inCodeBlock(false), inList(false), listLevel(0) {}
+        RenderState() : indentLevel(0), inCodeBlock(false), inList(false), 
+                       listLevel(0), inTableHeader(false), blockquoteLevel(0) {}
     };
     
     // Static callback functions for md4c parser
@@ -63,8 +101,16 @@ private:
     
     // Static helper methods for formatting (since callbacks are static)
     static void addIndentation(RenderState& state);
+    static void addBlockquotePrefixes(RenderState& state);
     static std::string getHeaderColor(int level);
     static std::string escapeAnsiSequences(const std::string& text);
+    static std::string decodeJsonAndUnicodeEscapes(const std::string& text);
+    
+    // Table rendering helpers
+    static size_t getDisplayWidth(const std::string& text);
+    static void calculateColumnWidths(TableState& table);
+    static void renderTable(RenderState& state);
+    static std::string padCell(const std::string& content, size_t width, bool isHeader = false);
 };
 
 #endif // MARKDOWN_RENDERER_H
