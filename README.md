@@ -1,314 +1,173 @@
 # AITH - And It Talks, Human
 
-This project is a lightweight C++ application for interacting with aith models in the terminal. AITH features a modular architecture with dedicated classes for system operations, configuration management, provider handling, and model blacklisting.
+A lightweight C++ terminal application for interacting with AI models from multiple providers.
 
 ## Features
 
-- **Multi-Provider Support**: Easily switch between different aith providers (Groq, OpenRouter, etc.).
-- **Chat with aith Models**: Communicate with aith models using a simple command-line interface.
-- **History Management**: Save and manage chat histories for future reference.
-- **Markdown Rendering**: Render aith responses in Markdown format for better readability.
-- **Model Blacklisting**: Keep track of problematic models across different providers with automatic blacklisting.
-- **Performance Benchmarking**: Test and compare model response times with built-in benchmarking tools.
-- **Modular Architecture**: Clean separation of concerns with SystemUtils, ConfigManager, ProviderManager, BlacklistManager, and ApiManager classes.
+- **Multi-Provider Support**: Switch between Groq, OpenRouter, and other AI providers
+- **Chat Interface**: Simple command-line chat with AI models  
+- **History Management**: View, manage, and reuse conversation history
+- **Model Blacklisting**: Automatically avoid problematic models
+- **Performance Benchmarking**: Test and compare model response times
+- **Markdown Rendering**: Clean formatting of AI responses
 
 ## Prerequisites
 
-Before building and running the application, ensure you have the following installed on your system:
+Developed on Arch Linux. Required dependencies:
 
-- A C++ compiler with C++17 support (e.g., GCC or Clang)
-- CMake (version 3.10 or higher)
-- CURL library (libcurl-dev on Ubuntu/Debian)
-- JsonCpp library (libjsoncpp-dev on Ubuntu/Debian)
-- `mdcat` for rendering Markdown in the terminal (optional but recommended)
+```bash
+# Arch Linux
+sudo pacman -S base-devel cmake ninja curl jsoncpp
+```
 
-## Building the Project
+## Building
 
-1. Clone the repository:
+```bash
+git clone <repository-url>
+cd aith
+cmake -B build -G Ninja
+ninja -C build
+```
 
-   ```bash
-   git clone <repository-url>
-   cd aith
-   ```
-
-2. Create a build directory and navigate to it:
-
-   ```bash
-   mkdir build && cd build
-   ```
-
-3. Run CMake to configure the project:
-
-   ```bash
-   cmake ..
-   ```
-
-4. Build the project:
-
-   ```bash
-   make
-   ```
+The executable will be created as `./build/aith`.
 
 ## Configuration
 
-The application uses a flexible configuration system with the following priority order:
+Create configuration files in `~/.config/aith/`:
 
-1. **Environment Variables** (highest priority)
-2. **Provider-specific configuration files**
-3. **Main configuration file**
-4. **Built-in defaults** (lowest priority)
+### Provider Configuration
 
-### Configuration File Structure
-
-Create provider-specific configuration files in `~/.config/ai/` directory:
-
-```text
-~/.config/ai/groq.conf
-~/.config/ai/openrouter.conf
-~/.config/ai/anthropic.conf
-# etc...
-```
-
-Each provider file should contain:
+Create a file for each provider (e.g., `groq.conf`, `openrouter.conf`):
 
 ```bash
-API_URL=https://api.provider.com/path
-API_KEY=your-api-key-here
-DEFAULT_MODEL=provider-model-name
+# ~/.config/aith/groq.conf
+API_URL=https://api.groq.com/openai/v1
+API_KEY=your-groq-api-key-here
+DEFAULT_MODEL=llama-3.1-70b-versatile
 ```
 
-### Main Configuration
-
-Set your default provider in the main config file:
+### Default Provider
 
 ```bash
-# ~/.config/ai/config
+# ~/.config/aith/config  
 DEFAULT_PROVIDER=groq
 ```
 
-### Environment Variables
-
-Environment variables take highest priority and follow this pattern:
+### Environment Variables (Alternative)
 
 ```bash
-# Provider-specific variables (recommended)
 export GROQ_API_KEY="your-api-key"
-export OPENROUTER_API_URL="https://openrouter.ai/api/v1"
-export GROQ_DEFAULT_MODEL="llama3-70b-8192"
-
-# Generic variables (fallback)
-export API_KEY="your-api-key"
-export API_URL="https://api.provider.com/v1"
-export DEFAULT_MODEL="model-name"
-
-# Provider selection
-export AGENT="groq"  # Sets default provider
+export OPENROUTER_API_KEY="your-openrouter-key"
+export AGENT="groq"  # Default provider
 ```
 
-## Running the Application
+## Usage
 
-Basic usage follows this pattern:
+### Basic Chat
 
 ```bash
-./aith [--provider=NAME | -p NAME] [list | history | test | blacklist | new "prompt" | "prompt"] [model (optional)]
+# Start new conversation
+./build/aith new "Explain quantum computing"
+
+# Continue conversation  
+./build/aith "Can you give me an example?"
+
+# Use specific provider
+./build/aith -p openrouter "Write a Python function"
 ```
 
-### Common Commands
-
-1. **Navigate to the build directory:**
-
-   ```bash
-   cd build
-   ```
-
-2. **Run with default provider:**
-
-   ```bash
-   ./aith "Your prompt here"
-   ```
-
-3. **Run with a specific provider:**
-
-   ```bash
-   ./aith --provider=openrouter "Your prompt here"
-   # OR
-   ./aith -p groq "Your prompt here"
-   ```
-
-4. **Start a new chat:**
-
-   ```bash
-   ./aith new "Your initial prompt"
-   ```
-
-5. **List available models:**
-
-   ```bash
-   ./aith list
-   # OR with specific provider
-   ./aith --provider=anthropic list
-   ```
-
-6. **View your chat history:**
-
-   ```bash
-   ./aith history
-   ```
-
-7. **Run performance benchmarks:**
-
-   ```bash
-   # Test all models with default prompt
-   ./aith test
-   
-   # Test with custom prompt
-   ./aith test "How are you?"
-   
-   # Test specific provider's models
-   ./aith --provider=openrouter test "Explain AI"
-   ```
-
-8. **Manage model blacklist:**
-
-   ```bash
-   # List blacklisted models
-   ./aith blacklist list
-   
-   # Add a model to the blacklist
-   ./aith blacklist add <provider> <model_name> [reason]
-   
-   # Remove a model from the blacklist
-   ./aith blacklist remove <provider> <model_name>
-   ```
-
-## Model Blacklist
-
-The application maintains a sophisticated blacklist system to automatically and manually track problematic models. Models are blacklisted per provider, allowing fine-grained control over which models to avoid.
-
-### Automatic Blacklisting
-
-During benchmark testing (`./aith test`), models are automatically blacklisted if they:
-
-- Return invalid API response formats
-- Don't support chat completions
-- Fail to respond properly to test prompts
-
-Auto-blacklisted models include the reason and timestamp for tracking.
-
-### Manual Blacklist Management
-
-You can manually manage the blacklist using these commands:
+### History Management
 
 ```bash
-# List all blacklisted models
-./aith blacklist list
+# List conversations
+./build/aith history
 
-# Add a model to blacklist
-./aith blacklist add groq llama-problematic-model "Too many hallucinations"
+# View conversation
+./build/aith history view current
+./build/aith history view latest  
+./build/aith history view filename.json
 
-# Remove a model from blacklist  
-./aith blacklist remove groq llama-problematic-model
+# Switch to previous conversation
+./build/aith history reuse latest
+./build/aith history reuse filename.json
 ```
 
-### Blacklist File Format
-
-The blacklist is stored at `~/.config/ai/blacklist` in a pipe-separated format:
-
-```text
-provider | model | reason # Added on date and time
-```
-
-Example entries:
-
-```text
-groq | whisper-large-v3 | Auto-blacklisted: Invalid API response format # Added on Thu Jan 02 10:15:23 2025
-openrouter | claude-instant-1.2 | Very slow responses # Added on Thu Jan 02 11:30:45 2025
-```
-
-### Blacklist Features
-
-- **Provider-Specific**: Models are blacklisted per provider, as the same model may perform differently across providers
-- **Visual Indicators**: Blacklisted models are clearly marked in model listings  
-- **Usage Prevention**: The application prevents you from accidentally using blacklisted models
-- **Auto-Discovery**: Benchmark testing automatically discovers and blacklists problematic models
-- **Documentation**: Blacklist entries include reasons and timestamps to help track why models were blacklisted
-
-## Performance Benchmarking
-
-The application includes a comprehensive benchmarking system to test model performance:
+### Model Management
 
 ```bash
-# Test all available models with default prompt
-./aith test
+# List available models
+./build/aith list
 
-# Test with custom prompt
-./aith test "Explain quantum computing"
+# Test model performance
+./build/aith benchmark
 
-# Test specific provider's models
-./aith --provider=openrouter test "How are you?"
+# Manage blacklist
+./build/aith blacklist list
+./build/aith blacklist add groq problematic-model "reason"
+./build/aith blacklist remove groq model-name
 ```
 
-### Benchmark Features
-
-- **Response Time Measurement**: Measures and displays response times in milliseconds
-- **Automatic Filtering**: Skips previously blacklisted models during testing
-- **Auto-Blacklisting**: Automatically blacklists models that fail or return invalid responses
-- **Sorted Results**: Results are sorted by response time for easy comparison
-- **Provider-Specific**: Tests models for the currently selected provider
-
-## Architecture
-
-The application follows a modular architecture with clear separation of concerns:
-
-### Core Components
-
-- **SystemUtils**: Handles system-level operations like environment variable access and command execution
-- **ConfigManager**: Manages configuration file reading and parsing with priority resolution
-- **ProviderManager**: Handles aith provider selection, API key management, and provider-specific settings
-- **BlacklistManager**: Manages model blacklisting with automatic and manual blacklist operations
-- **ApiManager**: Coordinates high-level API operations (models, chat) with other managers
-- **API Domain**: Contains API models, helpers, and validation logic separate from HTTP transport
-- **HTTP Module**: Handles low-level HTTP transport and communication
-- **History Module**: Manages chat history storage and retrieval
-- **Markdown Module**: Renders aith responses in formatted Markdown
-- **Benchmark Module**: Provides performance testing and model comparison functionality
-
-### Configuration Priority
-
-The system resolves configuration values in this order:
-
-1. Environment variables (highest priority)
-2. Provider-specific config files (`~/.config/ai/{provider}.conf`)
-3. Main configuration file (`~/.config/ai/config`)
-4. Built-in defaults (lowest priority)
-
-### Provider Resolution
-
-Provider selection follows this hierarchy:
-
-1. Command line `--provider` flag (highest priority)
-2. `AGENT` environment variable
-3. `DEFAULT_PROVIDER` from main config file
-4. Built-in default ("groq") (lowest priority)
-
-## Documentation
-
-Detailed documentation for the project is available in the `docs/html` directory. Open the `index.html` file in a web browser to view the documentation:
+### Help
 
 ```bash
-xdg-open docs/html/index.html
+./build/aith help
+./build/aith --help
 ```
 
-## Contributing
+## Configuration Priority
 
-Contributions are welcome! If you have suggestions for improvements or new features, feel free to open an issue or submit a pull request.
+Settings are resolved in this order (highest to lowest priority):
+
+1. Command line flags (`--provider=name`)
+2. Environment variables (`GROQ_API_KEY`)
+3. Provider config files (`~/.config/aith/groq.conf`)
+4. Main config file (`~/.config/aith/config`)
+5. Built-in defaults
+
+## File Locations
+
+- **Configuration**: `~/.config/aith/`
+- **History**: `~/aith_histories/`
+- **Current conversation**: `~/.config/aith/current_conversation`
+- **Blacklist**: `~/.config/aith/blacklist`
+
+## Examples
+
+```bash
+# Quick start with Groq
+export GROQ_API_KEY="your-key"
+./build/aith new "Hello, world!"
+
+# Switch providers mid-conversation
+./build/aith -p openrouter "Continue this thought"
+
+# Benchmark all models
+./build/aith benchmark "Write a haiku"
+
+# View conversation history
+./build/aith history view current | head -20
+```
 
 ## License
 
-This project is licensed under the MIT License. See the `LICENSE` file for details.
+MIT License
 
-## Acknowledgments
+Copyright (c) 2025 AITH Contributors
 
-- [JsonCpp](https://github.com/open-source-parsers/jsoncpp) for JSON parsing.
-- [mdcat](https://github.com/lunaryorn/mdcat) for Markdown rendering.
-- [curl](https://curl.se/) for HTTP requests.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
