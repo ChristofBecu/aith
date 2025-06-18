@@ -9,6 +9,32 @@
 #include <iostream>
 
 /**
+ * Extracts the first user prompt from an existing history file.
+ * This ensures that archived history files are named based on their actual content.
+ * @param historyPath The path to the history file to read.
+ * @return The first user prompt found, or empty string if none exists.
+ */
+std::string extractFirstUserPrompt(const std::string &historyPath) {
+    try {
+        Json::Value history = JsonFileHandler::read(historyPath);
+        
+        // Look for the first user message in the history
+        if (history.isArray()) {
+            for (const auto &message : history) {
+                if (message.isMember("role") && message.isMember("content") && 
+                    message["role"].asString() == "user") {
+                    return message["content"].asString();
+                }
+            }
+        }
+    } catch (const std::exception&) {
+        // If reading fails, return empty string (handled by caller)
+    }
+    
+    return "";
+}
+
+/**
  * Starts a new history file for storing chat interactions.
  * @param prompt The initial user prompt to store in the history.
  * @param historyDir The directory where history files are stored.
@@ -20,8 +46,16 @@ void startNewHistory(const std::string &prompt, const std::string &historyDir, c
         char timestamp[20];
         std::strftime(timestamp, sizeof(timestamp), "%Y%m%d_%H%M%S", std::localtime(&now));
         
-        // Generate a concise, meaningful filename from the prompt
-        std::string descriptiveName = FilenameGenerator::generateFromPrompt(prompt, 45);
+        // CRITICAL FIX: Use the first prompt from the existing conversation being archived,
+        // not the new prompt that's starting the next conversation
+        std::string firstPrompt = extractFirstUserPrompt(currentHistory);
+        if (firstPrompt.empty()) {
+            // Fallback: if we can't extract the first prompt, use a generic name
+            firstPrompt = "conversation";
+        }
+        
+        // Generate filename based on the conversation being saved, not the new one starting
+        std::string descriptiveName = FilenameGenerator::generateFromPrompt(firstPrompt, 45);
         
         // Ensure the filename is unique in the history directory
         std::string baseFilename = "history_" + descriptiveName + "_" + timestamp;
