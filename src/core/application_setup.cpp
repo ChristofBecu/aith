@@ -2,6 +2,9 @@
 #include "provider_manager.h"
 #include "system_utils.h"
 #include "directory_operations.h"
+#include "file_operations.h"
+#include "json_file_handler.h"
+#include "filename_generator.h"
 #include <iostream>
 #include <stdexcept>
 
@@ -22,10 +25,14 @@ ApplicationSetup::Config ApplicationSetup::initialize() {
     
     // Setup directory structure
     config.historyDir = getHistoryDirectoryPath();
+    config.currentConversationName = getCurrentConversationName();
     config.currentHistory = getCurrentHistoryPath(config.historyDir);
     
     // Ensure directories exist
     ensureDirectoriesExist(config.historyDir);
+    
+    // Handle backward compatibility migration
+    migrateLegacyCurrentHistory(config);
     
     return config;
 }
@@ -76,5 +83,109 @@ std::string ApplicationSetup::getHistoryDirectoryPath() {
  * Extracted from main.cpp line 39.
  */
 std::string ApplicationSetup::getCurrentHistoryPath(const std::string& historyDir) {
-    return historyDir + "/current_history.json";
+    std::string conversationName = getCurrentConversationName();
+    if (conversationName.empty()) {
+        // Fallback to old naming for backward compatibility
+        return historyDir + "/current_history.json";
+    }
+    return historyDir + "/current_" + conversationName + ".json";
+}
+
+/**
+ * Gets the current conversation name from persistent storage.
+ */
+std::string ApplicationSetup::getCurrentConversationName() {
+    std::string statePath = getConversationStatePath();
+    
+    if (!FileOperations::exists(statePath)) {
+        return "";
+    }
+    
+    try {
+        std::string content = FileOperations::read(statePath);
+        // Remove any trailing newlines or whitespace
+        content.erase(content.find_last_not_of(" \n\r\t") + 1);
+        return content;
+    } catch (const std::exception&) {
+        return "";
+    }
+}
+
+/**
+ * Sets the current conversation name in persistent storage.
+ */
+void ApplicationSetup::setCurrentConversationName(const std::string& conversationName) {
+    std::string statePath = getConversationStatePath();
+    
+    try {
+        FileOperations::write(statePath, conversationName);
+    } catch (const std::exception& e) {
+        std::cerr << "Warning: Could not save conversation state: " << e.what() << std::endl;
+    }
+}
+
+/**
+ * Gets the path to the conversation state file.
+ */
+std::string ApplicationSetup::getConversationStatePath() {
+    std::string home = SystemUtils::getEnvVar("HOME");
+    if (home.empty()) {
+        throw std::runtime_error("HOME environment variable not set");
+    }
+    return home + "/.config/aith/current_conversation";
+}
+
+/**
+ * Migrates legacy current_history.json to the new dynamic naming system.
+ */
+void ApplicationSetup::migrateLegacyCurrentHistory(Config& config) {
+    std::string legacyPath = config.historyDir + "/current_history.json";
+    
+    // If there's no legacy file and no current conversation name, nothing to do
+    if (!FileOperations::exists(legacyPath) && config.currentConversationName.empty()) {
+        return;
+    }
+    
+    // If there's a legacy file but no current conversation name, migrate it
+    if (FileOperations::exists(legacyPath) && config.currentConversationName.empty()) {
+        try {
+            // Read the legacy file to extract the first prompt
+            Json::Value history = JsonFileHandler::read(legacyPath);
+            std::string firstPrompt = "";
+            
+            if (history.isArray() && !history.empty()) {
+                for (const auto &message : history) {
+                    if (message.isMember("role") && message.isMember("content") && 
+                        message["role"].asString() == "user") {
+                        firstPrompt = message["content"].asString();
+                        break;
+                    }
+                }
+            }
+            
+            if (firstPrompt.empty()) {
+                firstPrompt = "conversation";
+            }
+            
+            // Generate a descriptive name and set it as current
+            std::string conversationName = FilenameGenerator::generateFromPrompt(firstPrompt, 45);
+            setCurrentConversationName(conversationName);
+            
+            // Update config
+            config.currentConversationName = conversationName;
+            config.currentHistory = getCurrentHistoryPath(config.historyDir);
+            
+            // Rename the legacy file to the new name
+            FileOperations::rename(legacyPath, config.currentHistory);
+            
+            std::cout << "📁 Migrated legacy conversation to: current_" << conversationName << ".json" << std::endl;
+            
+        } catch (const std::exception& e) {
+            std::cerr << "Warning: Could not migrate legacy history file: " << e.what() << std::endl;
+            // Leave legacy file as-is and create new conversation state
+            setCurrentConversationName("conversation");
+            config.currentConversationName = "conversation";
+            config.currentHistory = getCurrentHistoryPath(config.historyDir);
+        }
+    }
 }

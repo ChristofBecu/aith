@@ -2,6 +2,7 @@
 #include "file_operations.h"
 #include "json_file_handler.h"
 #include "filename_generator.h"
+#include "application_setup.h"
 #include <json/json.h>
 #include <algorithm>
 #include <cctype>
@@ -75,6 +76,58 @@ void startNewHistory(const std::string &prompt, const std::string &historyDir, c
     history.append(entry);
 
     JsonFileHandler::write(currentHistory, history);
+}
+
+/**
+ * Starts a new history file and updates the current conversation name.
+ * This is the enhanced version that supports dynamic conversation naming.
+ * @param prompt The initial user prompt for the new conversation.
+ * @param historyDir The directory where history files are stored.
+ * @param currentHistory The path to the current history file.
+ * @return The path to the new current history file.
+ */
+std::string startNewHistoryAndGetPath(const std::string &prompt, const std::string &historyDir, const std::string &currentHistory) {
+    // Archive existing conversation if it exists
+    if (FileOperations::exists(currentHistory)) {
+        std::time_t now = std::time(nullptr);
+        char timestamp[20];
+        std::strftime(timestamp, sizeof(timestamp), "%Y%m%d_%H%M%S", std::localtime(&now));
+        
+        // Use the first prompt from the existing conversation being archived
+        std::string firstPrompt = extractFirstUserPrompt(currentHistory);
+        if (firstPrompt.empty()) {
+            firstPrompt = "conversation";
+        }
+        
+        std::string descriptiveName = FilenameGenerator::generateFromPrompt(firstPrompt, 45);
+        std::string baseFilename = "history_" + descriptiveName + "_" + timestamp;
+        std::string uniqueFilename = FilenameGenerator::ensureUniqueFilename(historyDir, baseFilename, ".json");
+        
+        FileOperations::rename(currentHistory, historyDir + "/" + uniqueFilename + ".json");
+    }
+    
+    // Generate descriptive name for the NEW conversation
+    std::string newConversationName = FilenameGenerator::generateFromPrompt(prompt, 45);
+    
+    // Update the current conversation name in persistent storage
+    ApplicationSetup::setCurrentConversationName(newConversationName);
+    
+    // Calculate the new current history path
+    std::string newCurrentHistory = historyDir + "/current_" + newConversationName + ".json";
+    
+    // Create initial empty history array in the new file
+    FileOperations::write(newCurrentHistory, "[]");
+    
+    // Add the initial user prompt to the new history
+    Json::Value history(Json::arrayValue);
+    Json::Value entry;
+    entry["role"] = "user";
+    entry["content"] = prompt;
+    history.append(entry);
+    
+    JsonFileHandler::write(newCurrentHistory, history);
+    
+    return newCurrentHistory;
 }
 
 /**

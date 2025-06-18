@@ -22,10 +22,11 @@ public:
      * after initialization is complete.
      */
     struct Config {
-        std::string apiKey;           ///< API key for the current provider
-        std::string provider;         ///< Current AI provider name
-        std::string historyDir;       ///< Directory path for history files
-        std::string currentHistory;   ///< Path to current history file
+        std::string apiKey;                ///< API key for the current provider
+        std::string provider;              ///< Current AI provider name
+        std::string historyDir;            ///< Directory path for history files
+        std::string currentHistory;        ///< Path to current history file
+        std::string currentConversationName; ///< Descriptive name for current conversation
     };
 
     /**
@@ -68,6 +69,28 @@ public:
      * @throws std::runtime_error if directory creation fails
      */
     static void ensureDirectoriesExist(const std::string& historyDir);
+    
+    /**
+     * Gets the current conversation name from persistent storage.
+     * 
+     * @return The descriptive name of the current conversation, or empty string if none
+     */
+    static std::string getCurrentConversationName();
+    
+    /**
+     * Sets the current conversation name in persistent storage and updates paths.
+     * 
+     * @param conversationName The descriptive name for the current conversation
+     */
+    static void setCurrentConversationName(const std::string& conversationName);
+    
+    /**
+     * Constructs the current history file path.
+     * 
+     * @param historyDir The history directory path
+     * @return Full path to the current history file (dynamic based on conversation name)
+     */
+    static std::string getCurrentHistoryPath(const std::string& historyDir);
 
 private:
     /**
@@ -78,10 +101,16 @@ private:
     static std::string getHistoryDirectoryPath();
 
     /**
-     * Constructs the current history file path.
+     * Gets the path to the conversation state file.
      * 
-     * @param historyDir The history directory path
-     * @return Full path to the current_history.json file
+     * @return Full path to the current conversation state file
      */
-    static std::string getCurrentHistoryPath(const std::string& historyDir);
+    static std::string getConversationStatePath();
+    
+    /**
+     * Migrates legacy current_history.json to the new dynamic naming system.
+     * 
+     * @param config The application configuration to update
+     */
+    static void migrateLegacyCurrentHistory(Config& config);
 };

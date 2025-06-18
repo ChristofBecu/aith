@@ -69,6 +69,11 @@ void ChatCommand::executeDirectChat(const std::string& prompt, const std::string
 }
 
 void ChatCommand::executeNewChat(const std::string& prompt, const std::string& model) {
-    startNewHistory(prompt, config_.historyDir, config_.currentHistory);
+    // Start new history and get the updated current history path
+    std::string newCurrentHistoryPath = startNewHistoryAndGetPath(prompt, config_.historyDir, config_.currentHistory);
+    
+    // Update our config to use the new path
+    config_.currentHistory = newCurrentHistoryPath;
+    
     ApiManager::chat(prompt, model, config_.apiKey, config_.currentHistory, true);
 }
