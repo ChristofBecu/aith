@@ -17,7 +17,7 @@ Developed on Arch Linux. Required dependencies:
 
 ```bash
 # Arch Linux
-sudo pacman -S base-devel cmake ninja curl jsoncpp
+sudo pacman -S base-devel cmake ninja
 ```
 
 ## Building
