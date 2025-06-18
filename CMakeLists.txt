@@ -89,6 +89,7 @@ set(UTILS_SOURCES
     src/utils/json_file_handler.cpp
     src/utils/config_file_handler.cpp
     src/utils/file_permissions.cpp
+    src/utils/filename_generator.cpp
 )
 
 set(COMMANDS_SOURCES

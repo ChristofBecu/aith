@@ -74,3 +74,6 @@ Thumbs.db
 
 # executable files
 aith
+
+# Chat instructions
+.github/instructions/*

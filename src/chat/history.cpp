@@ -1,6 +1,7 @@
 #include "history.h"
 #include "file_operations.h"
 #include "json_file_handler.h"
+#include "filename_generator.h"
 #include <json/json.h>
 #include <algorithm>
 #include <cctype>
@@ -18,10 +19,15 @@ void startNewHistory(const std::string &prompt, const std::string &historyDir, c
         std::time_t now = std::time(nullptr);
         char timestamp[20];
         std::strftime(timestamp, sizeof(timestamp), "%Y%m%d_%H%M%S", std::localtime(&now));
-        std::string title = prompt;
-        std::replace(title.begin(), title.end(), ' ', '_');
-        title.erase(std::remove_if(title.begin(), title.end(), [](char c) { return !std::isalnum(c) && c != '_'; }), title.end());
-        FileOperations::rename(currentHistory, historyDir + "/history_" + title + "_" + timestamp + ".json");
+        
+        // Generate a concise, meaningful filename from the prompt
+        std::string descriptiveName = FilenameGenerator::generateFromPrompt(prompt, 45);
+        
+        // Ensure the filename is unique in the history directory
+        std::string baseFilename = "history_" + descriptiveName + "_" + timestamp;
+        std::string uniqueFilename = FilenameGenerator::ensureUniqueFilename(historyDir, baseFilename, ".json");
+        
+        FileOperations::rename(currentHistory, historyDir + "/" + uniqueFilename + ".json");
     }
 
     // Create initial empty history array
