@@ -19,6 +19,7 @@ public:
         std::vector<std::string> remainingArgs; ///< Arguments after processing special flags
         bool hasError = false;                  ///< Indicates if parsing encountered an error
         std::string errorMessage;               ///< Error message if hasError is true
+        bool showHelp = false;                  ///< Indicates if help flag was found
     };
 
     /**

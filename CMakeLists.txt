@@ -100,6 +100,7 @@ set(COMMANDS_SOURCES
     src/commands/chat_command.cpp
     src/commands/benchmark_command.cpp
     src/commands/blacklist_command.cpp
+    src/commands/help_command.cpp
 )
 
 set(ALL_SOURCES

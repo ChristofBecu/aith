@@ -18,10 +18,16 @@ CommandLineParser::ParsedArgs CommandLineParser::parseArguments(int argc, char* 
         args.push_back(argv[i]);
     }
     
-    // Process special arguments like --provider
+    // Process special arguments like --provider and help flags
     for (size_t i = 0; i < args.size(); ++i) {
+        // Check for help flags
+        if (args[i] == "--help" || args[i] == "-h") {
+            result.showHelp = true;
+            args.erase(args.begin() + i);
+            --i; // Adjust index after removal
+        }
         // Check for --provider=value or -p value format
-        if (hasPrefix(args[i], "--provider=")) {
+        else if (hasPrefix(args[i], "--provider=")) {
             ProviderManager::setCommandLineProvider(extractValue(args[i], "--provider="));
             args.erase(args.begin() + i);
             --i; // Adjust index after removal

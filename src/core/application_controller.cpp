@@ -12,6 +12,23 @@ int ApplicationController::run(int argc, char* argv[]) {
         return 1;
     }
     
+    // Check if help was requested
+    if (parsedArgs.showHelp) {
+        // Initialize minimal config for help command
+        ApplicationSetup::Config config;
+        try {
+            config = ApplicationSetup::initialize();
+        } catch (const std::runtime_error& e) {
+            // Even if initialization fails, we can still show help
+            config.provider = "unknown";
+            config.apiKey = "";
+        }
+        
+        std::vector<std::string> helpArgs = {"help"};
+        executeCommand("help", helpArgs, config);
+        return 0;
+    }
+    
     // Get the remaining arguments after processing special flags
     std::vector<std::string> args = parsedArgs.remainingArgs;
     
