@@ -10,6 +10,11 @@
  */
 void renderMarkdown(const std::string &markdown) {
     TerminalMarkdownRenderer renderer;
+    
+    // Configure word wrapping for better terminal output
+    renderer.setWordWrappingEnabled(true);
+    // Optionally set custom width for testing: renderer.setCustomTerminalWidth(80);
+    
     std::string rendered = renderer.render(markdown);
     std::cout << rendered << std::flush;
 }

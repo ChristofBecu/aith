@@ -59,6 +59,12 @@ int ListBlockHandler::leaveBlock(MD_BLOCKTYPE blockType, void* detail, RenderSta
             
         case MD_BLOCK_LI:
             // No specific action needed for list item end
+            // add trailing spacing if needed
+            if (state.listLevel != 0) {
+                // If we're still in a list, add a single newline
+                state.output += "\n";
+            }
+                // state.output += "\n"; // End of outermost list gets double newlines
             break;
     }
     
@@ -72,7 +78,7 @@ void ListBlockHandler::addIndentation(RenderState& state) const {
 }
 
 void ListBlockHandler::handleListItem(RenderState& state) const {
-    //state.output += "\n";
+    // state.output += "\n";
     addIndentation(state);
     
     // Add list nesting indentation
@@ -92,6 +98,7 @@ void ListBlockHandler::handleListItem(RenderState& state) const {
             // Unordered list - show bullet
             state.output += AnsiColors::DIM + AnsiColors::WHITE + "• " + AnsiColors::RESET;
         }
+
     }
 }
 

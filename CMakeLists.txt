@@ -69,6 +69,7 @@ set(MARKDOWN_SOURCES
     src/markdown/terminal_markdown_renderer.cpp
     src/markdown/common/ansi_colors.cpp
     src/markdown/common/text_utils.cpp
+    src/markdown/common/word_wrapper.cpp
     src/markdown/blocks/header_block_handler.cpp
     src/markdown/blocks/paragraph_block_handler.cpp
     src/markdown/blocks/code_block_handler.cpp

@@ -3,6 +3,9 @@
 #include <iostream>
 #include <sstream>
 #include <algorithm>
+#include <sys/ioctl.h>
+#include <unistd.h>
+#include <vector>
 
 /**
  * @brief Enhanced markdown renderer with comprehensive block support and professional table formatting
@@ -77,7 +80,8 @@ std::string TerminalMarkdownRenderer::render(const std::string& markdown) {
         return decodedMarkdown + "\n";
     }
 
-    return state.output;
+    // Apply word wrapping as post-processing step using the WordWrapper class
+    return wordWrapper_.wrapText(state.output);
 }
 
 /**
@@ -186,8 +190,12 @@ int TerminalMarkdownRenderer::textCallback(MD_TEXTTYPE textType, const MD_CHAR* 
                 // Handle line breaks within table cells
                 state->currentTable->currentCellContent += " ";
             } else {
-                if (state->blockHandlerFactory) {
-                    state->blockHandlerFactory->addTrailingSpacing(MD_BLOCK_P, *state); // Centralized spacing logic
+                state->output += "\n";
+                if (state->inCodeBlock) {
+                    addIndentation(*state);
+                } else if (state->blockquoteLevel > 0) {
+                    addBlockquotePrefixes(*state);
+                    addIndentation(*state);
                 }
             }
             break;

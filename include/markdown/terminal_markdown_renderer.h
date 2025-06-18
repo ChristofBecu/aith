@@ -8,6 +8,7 @@
 #include "markdown/common/render_state.h"
 #include "markdown/common/ansi_colors.h"
 #include "markdown/common/text_utils.h"
+#include "markdown/common/word_wrapper.h"
 #include "markdown/factory/block_handler_factory.h"
 
 /**
@@ -33,6 +34,30 @@ public:
      * @return Formatted string with ANSI color codes for terminal display
      */
     std::string render(const std::string& markdown);
+    
+    /**
+     * @brief Configure word wrapping settings
+     * @param enabled Whether to enable word wrapping
+     */
+    void setWordWrappingEnabled(bool enabled) { wordWrapper_.setEnabled(enabled); }
+    
+    /**
+     * @brief Set custom terminal width for word wrapping
+     * @param width Terminal width in characters (0 for auto-detection)
+     */
+    void setCustomTerminalWidth(size_t width) { wordWrapper_.setTerminalWidth(width); }
+    
+    /**
+     * @brief Check if word wrapping is enabled
+     * @return True if word wrapping is enabled
+     */
+    bool isWordWrappingEnabled() const { return wordWrapper_.isEnabled(); }
+    
+    /**
+     * @brief Get the custom terminal width setting
+     * @return Custom terminal width (0 means auto-detection)
+     */
+    size_t getCustomTerminalWidth() const { return wordWrapper_.getTerminalWidth(); }
 
 private:
     // Type aliases for cleaner code
@@ -41,6 +66,9 @@ private:
     
     // Block handler factory for delegating block processing
     markdown::BlockHandlerFactory blockHandlerFactory;
+    
+    // Word wrapper for post-processing text wrapping
+    markdown::WordWrapper wordWrapper_;
     
     // Static callback functions for md4c parser
     static int enterBlockCallback(MD_BLOCKTYPE blockType, void* detail, void* userdata);
