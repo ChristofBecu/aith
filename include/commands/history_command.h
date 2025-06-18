@@ -94,6 +94,16 @@ private:
     void executeView(const std::string& target);
 
     /**
+     * @brief Executes the 'reuse' subcommand.
+     * 
+     * Switches the current active conversation to a specified history file,
+     * allowing the user to continue a previous conversation.
+     * 
+     * @param target The target to reuse ("current", "latest", or filename)
+     */
+    void executeReuse(const std::string& target);
+
+    /**
      * @brief Resolves a target string to an actual history file path.
      * 
      * @param target Target identifier ("current", "latest", or filename)
@@ -101,4 +111,27 @@ private:
      * @throws std::runtime_error if target cannot be resolved
      */
     std::string resolveTarget(const std::string& target) const;
+
+    /**
+     * @brief Extracts conversation name from a file path.
+     * 
+     * @param filePath Full path to the history file
+     * @return Extracted conversation name
+     */
+    std::string extractConversationName(const std::string& filePath) const;
+
+    /**
+     * @brief Archives the current conversation if it exists and is different from the target.
+     * 
+     * @param newConversationName The name of the conversation being switched to
+     */
+    void archiveCurrentConversationIfNeeded(const std::string& newConversationName) const;
+
+    /**
+     * @brief Copies a history file to the current conversation format.
+     * 
+     * @param sourcePath Path to the source file
+     * @param targetPath Path to the target file
+     */
+    void copyFileToCurrentFormat(const std::string& sourcePath, const std::string& targetPath) const;
 };

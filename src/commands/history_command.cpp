@@ -2,9 +2,11 @@
 #include "directory_operations.h"
 #include "file_operations.h"
 #include "conversation_displayer.h"
+#include "core/application_setup.h"
 #include <iostream>
 #include <stdexcept>
 #include <ctime>
+#include <filesystem>
 
 /**
  * @brief Constructs a HistoryCommand with the provided configuration.
@@ -66,12 +68,21 @@ void HistoryCommand::executeSubcommand() {
         // Determine the target (third argument, or default to "current")
         std::string target = (args.size() > 2) ? args[2] : "current";
         executeView(target);
+    } else if (subcommand == "reuse") {
+        // Need a target argument for reuse
+        if (args.size() < 3) {
+            std::cerr << "Usage: aith history reuse [current|latest|filename]" << std::endl;
+            throw std::runtime_error("Reuse subcommand requires a target argument");
+        }
+        std::string target = args[2];
+        executeReuse(target);
     } else {
         // Unknown subcommand - show available options
         std::cerr << "Unknown subcommand: " << subcommand << std::endl;
         std::cerr << "Available subcommands:" << std::endl;
         std::cerr << "  (none)  - List all history files" << std::endl;
         std::cerr << "  view    - View conversation content" << std::endl;
+        std::cerr << "  reuse   - Switch to a previous conversation" << std::endl;
         throw std::invalid_argument("Invalid subcommand: " + subcommand);
     }
 }
@@ -200,5 +211,125 @@ std::string HistoryCommand::resolveTarget(const std::string& target) const {
         }
         
         return fullPath;
+    }
+}
+
+/**
+ * @brief Executes the 'reuse' subcommand.
+ */
+void HistoryCommand::executeReuse(const std::string& target) {
+    try {
+        // Resolve the target to an actual file path
+        std::string filePath = resolveTarget(target);
+        
+        // Extract conversation name from the file path
+        std::string conversationName = extractConversationName(filePath);
+        
+        // Archive the current conversation if it exists and is different
+        archiveCurrentConversationIfNeeded(conversationName);
+        
+        // Set the new conversation as current
+        ApplicationSetup::setCurrentConversationName(conversationName);
+        
+        // Construct the new current history path
+        std::string newCurrentPath = historyDir + "/current_" + conversationName + ".json";
+        
+        // If the target file is not already in the current format, copy it
+        if (filePath != newCurrentPath) {
+            copyFileToCurrentFormat(filePath, newCurrentPath);
+        }
+        
+        std::cout << "✅ Successfully switched to conversation: " << conversationName << std::endl;
+        std::cout << "📁 Current history file: " << newCurrentPath << std::endl;
+        
+    } catch (const std::exception& e) {
+        std::cerr << "Error reusing history: " << e.what() << std::endl;
+        throw;
+    }
+}
+
+/**
+ * @brief Extracts conversation name from a file path.
+ */
+std::string HistoryCommand::extractConversationName(const std::string& filePath) const {
+    std::filesystem::path path(filePath);
+    std::string filename = path.filename().string();
+    
+    // Remove .json extension
+    if (filename.length() > 5 && filename.substr(filename.length() - 5) == ".json") {
+        filename = filename.substr(0, filename.length() - 5);
+    }
+    
+    // Handle different filename patterns
+    if (filename.substr(0, 8) == "current_") {
+        // Remove "current_" prefix and return the rest
+        return filename.substr(8);
+    } else if (filename.substr(0, 8) == "history_") {
+        // Remove "history_" prefix and timestamp suffix
+        std::string withoutPrefix = filename.substr(8);
+        
+        // Find the last occurrence of timestamp pattern (_YYYYMMDD_HHMMSS)
+        size_t timestampPos = withoutPrefix.rfind("_20");
+        if (timestampPos != std::string::npos) {
+            // Check if this looks like a timestamp
+            std::string possibleTimestamp = withoutPrefix.substr(timestampPos);
+            if (possibleTimestamp.length() >= 16) { // _YYYYMMDD_HHMMSS = 16 characters
+                withoutPrefix = withoutPrefix.substr(0, timestampPos);
+            }
+        }
+        
+        return withoutPrefix;
+    }
+    
+    // For other patterns, use the filename as-is
+    return filename;
+}
+
+/**
+ * @brief Archives the current conversation if it exists and is different from the target.
+ */
+void HistoryCommand::archiveCurrentConversationIfNeeded(const std::string& newConversationName) const {
+    std::string currentConversationName = ApplicationSetup::getCurrentConversationName();
+    
+    // If no current conversation or it's the same as the target, no need to archive
+    if (currentConversationName.empty() || currentConversationName == newConversationName) {
+        return;
+    }
+    
+    std::string currentHistoryPath = historyDir + "/current_" + currentConversationName + ".json";
+    
+    // Check if the current conversation file exists
+    if (!FileOperations::exists(currentHistoryPath)) {
+        return;
+    }
+    
+    // Archive the current conversation
+    std::time_t now = std::time(nullptr);
+    char timestamp[20];
+    std::strftime(timestamp, sizeof(timestamp), "%Y%m%d_%H%M%S", std::localtime(&now));
+    
+    std::string archivedPath = historyDir + "/history_" + currentConversationName + "_" + timestamp + ".json";
+    
+    try {
+        FileOperations::rename(currentHistoryPath, archivedPath);
+        std::cout << "📦 Archived current conversation: " << currentConversationName << std::endl;
+    } catch (const std::exception& e) {
+        std::cerr << "Warning: Could not archive current conversation: " << e.what() << std::endl;
+    }
+}
+
+/**
+ * @brief Copies a history file to the current conversation format.
+ */
+void HistoryCommand::copyFileToCurrentFormat(const std::string& sourcePath, const std::string& targetPath) const {
+    try {
+        // Read the source file content
+        std::string content = FileOperations::read(sourcePath);
+        
+        // Write to the target path
+        FileOperations::write(targetPath, content);
+        
+    } catch (const std::exception& e) {
+        throw std::runtime_error("Failed to copy conversation file: " + std::string(e.what()));
     }
 }
