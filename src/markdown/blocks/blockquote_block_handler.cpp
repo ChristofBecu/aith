@@ -10,7 +10,7 @@ bool BlockquoteBlockHandler::canHandle(MD_BLOCKTYPE blockType) const {
 int BlockquoteBlockHandler::enterBlock(MD_BLOCKTYPE blockType, void* detail, RenderState& state) const {
     if (!canHandle(blockType)) return 0;
     
-    state.output += "\n";
+    //state.output += "\n";
     state.blockquoteLevel++;
     
     return 0;

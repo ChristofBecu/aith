@@ -14,11 +14,12 @@ int CodeBlockHandler::enterBlock(MD_BLOCKTYPE blockType, void* detail, RenderSta
     
     auto* codeDetail = static_cast<MD_BLOCK_CODE_DETAIL*>(detail);
     state.inCodeBlock = true;
-    state.output += "\n";
+    //state.output += "\n";
     addIndentation(state);
     
     if (codeDetail->lang.text != nullptr) {
         std::string lang(codeDetail->lang.text, codeDetail->lang.size);
+        state.output += AnsiColors::GREEN + "(" + lang + ")" + AnsiColors::RESET;
         state.output += AnsiColors::GREEN + "(" + lang + ")" + AnsiColors::RESET + "\n";
         addIndentation(state);
     }

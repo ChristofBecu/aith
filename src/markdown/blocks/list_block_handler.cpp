@@ -72,7 +72,7 @@ void ListBlockHandler::addIndentation(RenderState& state) const {
 }
 
 void ListBlockHandler::handleListItem(RenderState& state) const {
-    state.output += "\n";
+    //state.output += "\n";
     addIndentation(state);
     
     // Add list nesting indentation

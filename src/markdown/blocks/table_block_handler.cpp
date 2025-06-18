@@ -21,7 +21,7 @@ int TableBlockHandler::enterBlock(MD_BLOCKTYPE blockType, void* detail, RenderSt
     
     switch (blockType) {
         case MD_BLOCK_TABLE:
-            state.output += "\n";
+            //state.output += "\n";
             state.currentTable = std::make_unique<TableState>();
             break;
             

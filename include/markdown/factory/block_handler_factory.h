@@ -33,13 +33,14 @@ public:
      * Handles leaving a block by delegating to the appropriate handler
      */
     int handleLeaveBlock(MD_BLOCKTYPE blockType, void* detail, RenderState& state) const;
+    
+    void addTrailingSpacing(MD_BLOCKTYPE blockType, RenderState& state) const;
 
 private:
     std::vector<std::unique_ptr<BlockHandler>> handlers;
     
     void initializeHandlers();
     const BlockHandler* findHandler(MD_BLOCKTYPE blockType) const;
-    void addTrailingSpacing(MD_BLOCKTYPE blockType, RenderState& state) const;
 };
 
 } // namespace markdown

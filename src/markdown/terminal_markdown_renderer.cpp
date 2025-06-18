@@ -186,12 +186,8 @@ int TerminalMarkdownRenderer::textCallback(MD_TEXTTYPE textType, const MD_CHAR* 
                 // Handle line breaks within table cells
                 state->currentTable->currentCellContent += " ";
             } else {
-                state->output += "\n";
-                if (state->inCodeBlock) {
-                    addIndentation(*state);
-                } else if (state->blockquoteLevel > 0) {
-                    addBlockquotePrefixes(*state);
-                    addIndentation(*state);
+                if (state->blockHandlerFactory) {
+                    state->blockHandlerFactory->addTrailingSpacing(MD_BLOCK_P, *state); // Centralized spacing logic
                 }
             }
             break;

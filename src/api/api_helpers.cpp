@@ -59,7 +59,7 @@ void ApiConsole::displayModelsFetchStatus(const std::string& provider) {
  * Displays a progress message for chat request.
  */
 void ApiConsole::displayChatRequestStatus(const std::string& provider, const std::string& model) {
-    std::cout << "Sending request to " << provider << " using model " << model << "..." << std::endl;
+    std::cout << "Sending request to " << provider << " using model " << model << "..." << std::endl << std::endl << std::flush;
 }
 
 /**

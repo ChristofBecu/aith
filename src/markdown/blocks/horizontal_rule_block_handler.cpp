@@ -11,10 +11,10 @@ bool HorizontalRuleBlockHandler::canHandle(MD_BLOCKTYPE blockType) const {
 int HorizontalRuleBlockHandler::enterBlock(MD_BLOCKTYPE blockType, void* detail, RenderState& state) const {
     if (!canHandle(blockType)) return 0;
     
-    state.output += "\n";
+    //state.output += "\n";
     addIndentation(state);
-    state.output += AnsiColors::DIM + AnsiColors::WHITE + "────────────────────────────────────────" + AnsiColors::RESET + "\n";
-    
+    //state.output += AnsiColors::DIM + AnsiColors::WHITE + "────────────────────────────────────────" + AnsiColors::RESET + "\n";
+    state.output += AnsiColors::DIM + AnsiColors::WHITE + "────────────────────────────────────────" + AnsiColors::RESET;
     return 0;
 }
 
