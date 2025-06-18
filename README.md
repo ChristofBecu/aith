@@ -148,6 +148,12 @@ export GROQ_API_KEY="your-key"
 ./build/aith history view current | head -20
 ```
 
+## To-Do
+
+- [ ] Configuration management improvements
+- [ ] Add more providers (e.g., OpenAI, Hugging Face)
+- [ ] Code block syntax highlighting
+
 ## License
 
 MIT License
