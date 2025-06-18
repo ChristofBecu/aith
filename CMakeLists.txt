@@ -7,6 +7,8 @@ project(aith)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
+add_compile_options(-Wno-uninitialized)
+
 # Include directories
 include_directories(include)
 include_directories(include/core)
@@ -114,9 +116,6 @@ set(ALL_SOURCES
 # Add executable
 add_executable(aith ${ALL_SOURCES})
 
-# Find and link libraries
-# Note: CURL dependency removed - now using httplib for HTTP requests
-
 # Find OpenSSL for HTTPS support
 find_package(OpenSSL REQUIRED)
 
@@ -161,6 +160,7 @@ set(CMAKE_WARN_DEPRECATED OFF CACHE BOOL "" FORCE)
 
 # Make all dependencies available
 FetchContent_MakeAvailable(httplib jsoncpp md4c)
+set_target_properties(md4c PROPERTIES COMPILE_FLAGS "-Wno-maybe-uninitialized")
 
 # Restore normal warning behavior after fetching external dependencies
 set(CMAKE_WARN_DEPRECATED ON CACHE BOOL "" FORCE)
@@ -171,7 +171,7 @@ target_link_libraries(aith PRIVATE httplib::httplib)
 # Link OpenSSL for HTTPS support
 target_link_libraries(aith PRIVATE OpenSSL::SSL OpenSSL::Crypto)
 
-# Link JsonCpp - use the static library target
+# Link JsonCpp - use the static library target and surpress warnings
 target_link_libraries(aith PRIVATE jsoncpp_static)
 
 # Link md4c for markdown rendering
