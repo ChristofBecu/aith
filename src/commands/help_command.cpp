@@ -11,7 +11,7 @@ void HelpCommand::execute() {
     displayMainHelp();
     displayExamples();
     displayProviderInfo();
-    displayHistoryInfo();
+    // displayHistoryInfo();
 }
 
 void HelpCommand::validateArgs() const {
@@ -34,9 +34,13 @@ COMMANDS:
     new "prompt"              Start a new conversation with the given prompt
     "prompt"                  Continue the current conversation with a prompt
     list                      List available AI models for the current provider
-    history [view TARGET]     Manage conversation history (list files, view conversations)
+    history                   List conversation history
+    history view [target]     View conversation content (current, latest, or filename)
+    history reuse [target]    Switch to a previous conversation (latest, or filename
     benchmark, test           Run performance benchmarks against AI providers
-    blacklist                 Manage provider and model blacklist
+    blacklist list            List all blacklisted models
+    blacklist add [target]    Add a model to the blacklist (e.g., groq llama2)
+    blacklist remove [target] Remove a model from the blacklist (e.g., openai)
     help                      Display this help message
 
 OPTIONS:
@@ -68,8 +72,10 @@ Management Commands:
     aith history view current           # View the current conversation
     aith history view latest            # View the most recent conversation
     aith history view filename.json     # View a specific conversation file
-    aith blacklist add groq llama2      # Blacklist a specific model
+    aith history reuse latest           # Switch to the most recent conversation
+    aith history reuse filename.json    # Continue a specific conversation
     aith blacklist list                 # List all blacklisted models
+    aith blacklist add groq llama2      # Blacklist a specific model
     aith blacklist remove openai        # Remove a model from the blacklist
     aith benchmark                      # Test provider performance
 
