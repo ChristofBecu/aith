@@ -25,7 +25,7 @@ std::string HelpCommand::getCommandName() const {
 
 void HelpCommand::displayMainHelp() const {
     std::cout << R"(
-🤖 AITH - AI Terminal Helper
+🤖 AITH - And It Talks, Human
 
 USAGE:
     aith [OPTIONS] COMMAND [ARGUMENTS]
@@ -34,10 +34,10 @@ COMMANDS:
     new "prompt"              Start a new conversation with the given prompt
     "prompt"                  Continue the current conversation with a prompt
     list                      List available AI models for the current provider
-    history                   Display conversation history management options
+    history [view TARGET]     Manage conversation history (list files, view conversations)
     benchmark, test           Run performance benchmarks against AI providers
     blacklist                 Manage provider and model blacklist
-    help              Display this help message
+    help                      Display this help message
 
 OPTIONS:
     --provider=NAME, -p NAME  Use a specific AI provider (groq, openrouter, etc.)
@@ -64,7 +64,10 @@ Using Different Providers:
 
 Management Commands:
     aith list                           # List available models
-    aith history                        # View conversation history
+    aith history                        # List all conversation history files
+    aith history view current           # View the current conversation
+    aith history view latest            # View the most recent conversation
+    aith history view filename.json     # View a specific conversation file
     aith blacklist add groq llama2      # Blacklist a specific model
     aith blacklist list                 # List all blacklisted models
     aith blacklist remove openai        # Remove a model from the blacklist

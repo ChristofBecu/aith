@@ -3,18 +3,22 @@
 #include "command.h"
 
 /**
- * @brief Command to display conversation history files and current history.
+ * @brief Command to display conversation history files and view conversation content.
  * 
- * This command lists all history files in the configured history directory
- * and shows the path to the current active history file. It provides users
- * with an overview of their conversation history files.
+ * This command supports multiple subcommands for managing conversation history:
  * 
  * Usage:
- *   ./aith history
+ *   ./aith history              - List all history files and show current file
+ *   ./aith history view [target] - View conversation content in formatted display
+ * 
+ * For the 'view' subcommand, target can be:
+ * - "current" or "." - View the current active history file
+ * - "latest" - View the most recently modified history file
+ * - filename - View a specific history file (e.g., "conversation_20240101_120000.json")
  * 
  * The command will:
- * - List all files in the history directory
- * - Display the current active history file path
+ * - List all files in the history directory (default behavior)
+ * - Display conversation content in a user-friendly format (view subcommand)
  * - Show filenames only (not full paths) for better readability
  */
 class HistoryCommand : public Command {
@@ -61,4 +65,40 @@ public:
      * @return "history"
      */
     std::string getCommandName() const override;
+
+private:
+    /**
+     * @brief Parses and executes the appropriate subcommand.
+     * 
+     * This method examines the first argument to determine which subcommand
+     * to execute. If no subcommand is provided, defaults to listing behavior.
+     */
+    void executeSubcommand();
+
+    /**
+     * @brief Executes the default list behavior (no subcommand).
+     * 
+     * Lists all files in the history directory and displays the current
+     * active history file path.
+     */
+    void executeList();
+
+    /**
+     * @brief Executes the 'view' subcommand.
+     * 
+     * Displays the conversation content from a specified history file
+     * in a user-friendly formatted display.
+     * 
+     * @param target The target to view ("current", "latest", or filename)
+     */
+    void executeView(const std::string& target);
+
+    /**
+     * @brief Resolves a target string to an actual history file path.
+     * 
+     * @param target Target identifier ("current", "latest", or filename)
+     * @return Full path to the resolved history file
+     * @throws std::runtime_error if target cannot be resolved
+     */
+    std::string resolveTarget(const std::string& target) const;
 };

@@ -90,6 +90,7 @@ set(UTILS_SOURCES
     src/utils/config_file_handler.cpp
     src/utils/file_permissions.cpp
     src/utils/filename_generator.cpp
+    src/utils/conversation_displayer.cpp
 )
 
 set(COMMANDS_SOURCES
