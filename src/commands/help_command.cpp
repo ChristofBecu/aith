@@ -35,24 +35,9 @@ COMMANDS:
     "prompt"                  Continue the current conversation with a prompt
     list                      List available AI models for the current provider
     history                   List conversation history
-    history view [target]     View conversation content (current, latest, or filename)
-    history reuse [target]    Switch to a previous conversation (latest, or filename
     benchmark, test           Run performance benchmarks against AI providers
-    blacklist list            List all blacklisted models
-    blacklist add [target]    Add a model to the blacklist (e.g., groq llama2)
-    blacklist remove [target] Remove a model from the blacklist (e.g., openai)
+    blacklist                 List all blacklisted models
     config                    Manage configuration settings
-    config wizard             Interactive configuration setup wizard
-    config add <provider> <key> Add provider configuration (non-interactive)
-    config list               List all configuration files
-    config show [provider]    Display configuration details
-    config create <provider>  Create configuration template
-    config edit <provider>    Edit provider configuration
-    config remove <provider>  Remove provider configuration
-    config validate [provider] Validate configuration files
-    config set-default <provider> Set default provider
-    config backup [name]      Create configuration backup
-    config restore [name]     Restore from backup
     help                      Display this help message
 
 OPTIONS:
@@ -78,29 +63,41 @@ Using Different Providers:
     aith --provider=groq new "Write a Python function"
     aith -p openrouter "Optimize this SQL query"
 
-Management Commands:
+Core Commands:
     aith list                           # List available models
-    aith history                        # List all conversation history files
-    aith history view current           # View the current conversation
-    aith history view latest            # View the most recent conversation
-    aith history view filename.json     # View a specific conversation file
-    aith history reuse latest           # Switch to the most recent conversation
-    aith history reuse filename.json    # Continue a specific conversation
-    aith blacklist list                 # List all blacklisted models
-    aith blacklist add groq llama2      # Blacklist a specific model
-    aith blacklist remove openai        # Remove a model from the blacklist
+    aith history                        # History management
+    aith blacklist                      # Blacklist management
+    aith config                         # Configuration management
     aith benchmark                      # Test provider performance
+    aith help                           # Show help information
+
+History management:
+    aith history                        # List all history files
+    aith history view current           # View the current conversation
+    aith history view latest            # View the previous conversation
+    aith history view filename.json     # View conversation content
+    aith history reuse latest           # Switch to previous conversation
+    aith history reuse filename.json    # Switch to previous conversation
+
+Blacklist management:
+    aith blacklist add model-name       # Add a model to the blacklist
+    aith blacklist remove model-name    # Remove a model from the blacklist
+    aith blacklist list                 # List all blacklisted models
 
 Configuration Management:
     aith config wizard                  # Run interactive setup wizard
-    aith config add groq sk-xxx         # Add provider configuration
     aith config list                    # List all configurations
     aith config show                    # Show current configuration
     aith config show anthropic          # Show specific provider config
+    aith config add groq sk-xxx         # Add provider configuration
+    aith config create groq             # Create a new provider configuration
+    aith config edit groq               # Edit existing provider configuration
+    aith config remove groq             # Remove provider configuration
     aith config validate                # Validate all configurations
-    aith config set-default openai      # Change default provider
-    aith config backup my-backup        # Create configuration backup
-    aith config restore my-backup       # Restore from backup
+    aith config validate groq           # Validate specific provider config
+    aith config set-default [name]      # Change default provider
+    aith config backup [name]           # Create configuration backup
+    aith config restore [name]          # Restore from backup
 
 )" << std::endl;
 }
