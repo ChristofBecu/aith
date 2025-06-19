@@ -17,9 +17,8 @@
  */
 static const std::vector<std::string> SUPPORTED_COMMANDS = {
     "list",
-    "history", 
-    "test",
-    "benchmark",  // Alias for "test"
+    "history",
+    "benchmark",
     "blacklist",
     "new",
     "config",
@@ -56,7 +55,7 @@ std::unique_ptr<Command> CommandFactory::createCommand(
             config.currentHistory,
             config.historyDir
         );
-    } else if (commandName == "test" || commandName == "benchmark") {
+    } else if (commandName == "benchmark") {
         return std::make_unique<BenchmarkCommand>(commandArgs, config);
     } else if (commandName == "blacklist") {
         return std::make_unique<BlacklistCommand>(commandArgs, config);

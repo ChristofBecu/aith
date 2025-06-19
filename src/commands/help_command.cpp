@@ -34,7 +34,7 @@ COMMANDS:
     new "prompt"              Start a new conversation with the given prompt
     "prompt"                  Continue the current conversation with a prompt (must be quoted)
     list                      List available AI models for the current provider
-    benchmark, test           Run performance benchmarks against AI providers
+    benchmark                 Run performance benchmarks against AI providers
     history [subcommand]      Manage conversation history (requires subcommand)
     blacklist [subcommand]    Manage blacklisted models (requires subcommand)
     config [subcommand]       Manage configuration settings (requires subcommand)
