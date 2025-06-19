@@ -10,6 +10,7 @@ A lightweight C++ terminal application for interacting with AI models from multi
 - **Model Blacklisting**: Automatically avoid problematic models
 - **Performance Benchmarking**: Test and compare model response times
 - **Markdown Rendering**: Clean formatting of AI responses
+- **Configuration Management**: Easy setup with environment variables or config files
 
 ## Prerequisites
 
@@ -150,7 +151,7 @@ export GROQ_API_KEY="your-key"
 
 ## To-Do
 
-- [ ] Configuration management improvements
+- [x] Configuration management improvements
 - [ ] Add more providers (e.g., OpenAI, Hugging Face)
 - [ ] Code block syntax highlighting
 
