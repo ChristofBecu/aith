@@ -112,10 +112,18 @@ void CommandFactory::validateCommandName(const std::string& commandName) {
 /**
  * Determines if the command represents a direct chat prompt.
  * 
- * Any command that doesn't match the known command list is treated
- * as a direct chat prompt, following the application's default behavior.
+ * Only treat as a chat command if it contains spaces (multi-word), 
+ * indicating it was likely quoted and is intended as a prompt.
+ * Single-word unrecognized commands should be treated as errors.
  */
 bool CommandFactory::isChatCommand(const std::string& commandName) {
+    // If it's a known command, it's definitely not a chat command
     auto it = std::find(SUPPORTED_COMMANDS.begin(), SUPPORTED_COMMANDS.end(), commandName);
-    return it == SUPPORTED_COMMANDS.end();
+    if (it != SUPPORTED_COMMANDS.end()) {
+        return false;
+    }
+    
+    // Only treat as chat command if it contains spaces (multi-word)
+    // This implements the requirement that single-word unrecognized commands should error
+    return commandName.find(' ') != std::string::npos;
 }

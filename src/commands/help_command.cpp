@@ -32,12 +32,12 @@ USAGE:
 
 COMMANDS:
     new "prompt"              Start a new conversation with the given prompt
-    "prompt"                  Continue the current conversation with a prompt
+    "prompt"                  Continue the current conversation with a prompt (must be quoted)
     list                      List available AI models for the current provider
-    history                   Manage conversation history
     benchmark, test           Run performance benchmarks against AI providers
-    blacklist                 Manage blacklisted models
-    config                    Manage configuration settings
+    history [subcommand]      Manage conversation history (requires subcommand)
+    blacklist [subcommand]    Manage blacklisted models (requires subcommand)
+    config [subcommand]       Manage configuration settings (requires subcommand)
     help                      Display this help message
 
 OPTIONS:
@@ -47,6 +47,11 @@ GLOBAL FLAGS:
     --help, -h               Show help information
     --provider=NAME          Override the default AI provider
     -p NAME                  Short form of --provider
+
+NOTES:
+    • Prompts must be quoted: aith "your prompt here"
+    • Commands requiring subcommands will show usage if run without them
+    • Unrecognized single-word commands will show an error
 
 )" << std::endl;
 }
