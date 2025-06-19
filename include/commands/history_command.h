@@ -8,17 +8,19 @@
  * This command supports multiple subcommands for managing conversation history:
  * 
  * Usage:
- *   ./aith history              - List all history files and show current file
- *   ./aith history view [target] - View conversation content in formatted display
+ *   ./aith history list             - List all history files and show current file
+ *   ./aith history view [target]    - View conversation content in formatted display
+ *   ./aith history reuse [target]   - Switch to a previous conversation
  * 
- * For the 'view' subcommand, target can be:
- * - "current" or "." - View the current active history file
- * - "latest" - View the most recently modified history file
- * - filename - View a specific history file (e.g., "conversation_20240101_120000.json")
+ * For the 'view' and 'reuse' subcommands, target can be:
+ * - "current" or "." - Use the current active history file
+ * - "latest" - Use the most recently modified history file
+ * - filename - Use a specific history file (e.g., "conversation_20240101_120000.json")
  * 
  * The command will:
- * - List all files in the history directory (default behavior)
+ * - List all files in the history directory (list subcommand)
  * - Display conversation content in a user-friendly format (view subcommand)
+ * - Switch to a previous conversation for continuation (reuse subcommand)
  * - Show filenames only (not full paths) for better readability
  */
 class HistoryCommand : public Command {
@@ -39,13 +41,13 @@ public:
                    const std::string& commandHistoryDir);
 
     /**
-     * @brief Executes the history listing command.
+     * @brief Executes the history command with subcommand support.
      * 
-     * Lists all files in the history directory and displays the current
-     * active history file. Files are shown as filenames only for better
-     * readability.
+     * Parses the subcommand and executes the appropriate action.
+     * Requires a subcommand to be provided.
      * 
      * @throws std::runtime_error if history directory doesn't exist or can't be read
+     * @throws std::invalid_argument if no subcommand is provided or subcommand is invalid
      */
     void execute() override;
 
@@ -53,9 +55,10 @@ public:
      * @brief Validates that the command can be executed.
      * 
      * Checks that the history directory path is provided and that the
-     * directory exists and is accessible.
+     * directory exists and is accessible. Also validates that a subcommand
+     * is provided.
      * 
-     * @throws std::invalid_argument if history directory is missing or inaccessible
+     * @throws std::invalid_argument if history directory is missing, inaccessible, or no subcommand provided
      */
     void validateArgs() const override;
 
@@ -76,10 +79,11 @@ private:
     void executeSubcommand();
 
     /**
-     * @brief Executes the default list behavior (no subcommand).
+     * @brief Executes the list subcommand.
      * 
      * Lists all files in the history directory and displays the current
-     * active history file path.
+     * active history file. Files are shown as filenames only for better
+     * readability.
      */
     void executeList();
 

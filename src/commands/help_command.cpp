@@ -34,9 +34,9 @@ COMMANDS:
     new "prompt"              Start a new conversation with the given prompt
     "prompt"                  Continue the current conversation with a prompt
     list                      List available AI models for the current provider
-    history                   List conversation history
+    history                   Manage conversation history
     benchmark, test           Run performance benchmarks against AI providers
-    blacklist                 List all blacklisted models
+    blacklist                 Manage blacklisted models
     config                    Manage configuration settings
     help                      Display this help message
 
@@ -65,14 +65,11 @@ Using Different Providers:
 
 Core Commands:
     aith list                           # List available models
-    aith history                        # History management
-    aith blacklist                      # Blacklist management
-    aith config                         # Configuration management
     aith benchmark                      # Test provider performance
     aith help                           # Show help information
 
 History management:
-    aith history                        # List all history files
+    aith history list                   # List all history files
     aith history view current           # View the current conversation
     aith history view latest            # View the previous conversation
     aith history view filename.json     # View conversation content

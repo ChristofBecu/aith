@@ -41,6 +41,11 @@ void HistoryCommand::validateArgs() const {
     if (!DirectoryOperations::exists(historyDir)) {
         throw std::runtime_error("History directory does not exist: " + historyDir);
     }
+    
+    // Require a subcommand (args[1])
+    if (args.size() < 2) {
+        throw std::invalid_argument("Usage: aith history [list|view|reuse] [options]");
+    }
 }
 
 /**
@@ -54,17 +59,13 @@ std::string HistoryCommand::getCommandName() const {
  * @brief Parses and executes the appropriate subcommand.
  */
 void HistoryCommand::executeSubcommand() {
-    // If no arguments provided beyond the command name, default to list behavior
-    if (args.size() <= 1) {
-        executeList();
-        return;
-    }
-    
     // Parse the subcommand from the second argument (args[1])
     // args[0] is "history", args[1] is the actual subcommand
     const std::string& subcommand = args[1];
     
-    if (subcommand == "view") {
+    if (subcommand == "list") {
+        executeList();
+    } else if (subcommand == "view") {
         // Determine the target (third argument, or default to "current")
         std::string target = (args.size() > 2) ? args[2] : "current";
         executeView(target);
@@ -78,12 +79,8 @@ void HistoryCommand::executeSubcommand() {
         executeReuse(target);
     } else {
         // Unknown subcommand - show available options
-        std::cerr << "Unknown subcommand: " << subcommand << std::endl;
-        std::cerr << "Available subcommands:" << std::endl;
-        std::cerr << "  (none)  - List all history files" << std::endl;
-        std::cerr << "  view    - View conversation content" << std::endl;
-        std::cerr << "  reuse   - Switch to a previous conversation" << std::endl;
-        throw std::invalid_argument("Invalid subcommand: " + subcommand);
+        throw std::runtime_error("Unknown history command: " + subcommand + 
+                                ". Available commands: list, view, reuse");
     }
 }
 
