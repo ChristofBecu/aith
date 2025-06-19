@@ -12,11 +12,8 @@
  * @brief Constructs a HistoryCommand with the provided configuration.
  */
 HistoryCommand::HistoryCommand(const std::vector<std::string>& commandArgs,
-                              const std::string& commandApiKey,
-                              const std::string& commandProvider,
-                              const std::string& commandCurrentHistory,
-                              const std::string& commandHistoryDir)
-    : Command(commandArgs, commandApiKey, commandProvider, commandCurrentHistory, commandHistoryDir) {
+                              const ApplicationSetup::Config& config)
+    : Command(commandArgs, config.apiKey, config.provider, config.currentHistory, config.historyDir) {
 }
 
 /**

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "command.h"
+#include "core/application_setup.h"
 
 /**
  * @brief Command to display conversation history files and view conversation content.
@@ -28,17 +29,11 @@ public:
     /**
      * @brief Constructs a HistoryCommand with the provided configuration.
      * 
-     * @param commandArgs Command arguments (unused for history command)
-     * @param commandApiKey API key (unused for history command)
-     * @param commandProvider Current provider name (unused for history command)
-     * @param commandCurrentHistory Path to current history file
-     * @param commandHistoryDir Path to history directory
+     * @param commandArgs Command arguments for history subcommands
+     * @param config Application configuration containing history directory and other settings
      */
     HistoryCommand(const std::vector<std::string>& commandArgs,
-                   const std::string& commandApiKey,
-                   const std::string& commandProvider,
-                   const std::string& commandCurrentHistory,
-                   const std::string& commandHistoryDir);
+                   const ApplicationSetup::Config& config);
 
     /**
      * @brief Executes the history command with subcommand support.

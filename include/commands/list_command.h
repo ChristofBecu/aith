@@ -1,6 +1,7 @@
 #pragma once
 
 #include "command.h"
+#include "core/application_setup.h"
 
 /**
  * @brief Command to list available AI models for the current provider.
@@ -24,16 +25,10 @@ public:
      * @brief Constructs a ListCommand with the provided configuration.
      * 
      * @param commandArgs Command arguments (unused for list command)
-     * @param commandApiKey API key for provider authentication
-     * @param commandProvider Current provider name
-     * @param commandCurrentHistory Path to current history file (unused)
-     * @param commandHistoryDir Path to history directory (unused)
+     * @param config Application configuration containing API key, provider, and other settings
      */
     ListCommand(const std::vector<std::string>& commandArgs,
-                const std::string& commandApiKey,
-                const std::string& commandProvider,
-                const std::string& commandCurrentHistory,
-                const std::string& commandHistoryDir);
+                const ApplicationSetup::Config& config);
 
     /**
      * @brief Executes the list models command.

@@ -40,21 +40,9 @@ std::unique_ptr<Command> CommandFactory::createCommand(
     validateCommandName(commandName);
     
     if (commandName == "list") {
-        return std::make_unique<ListCommand>(
-            commandArgs,
-            config.apiKey,
-            config.provider,
-            config.currentHistory,
-            config.historyDir
-        );
+        return std::make_unique<ListCommand>(commandArgs, config);
     } else if (commandName == "history") {
-        return std::make_unique<HistoryCommand>(
-            commandArgs,
-            config.apiKey,
-            config.provider,
-            config.currentHistory,
-            config.historyDir
-        );
+        return std::make_unique<HistoryCommand>(commandArgs, config);
     } else if (commandName == "benchmark") {
         return std::make_unique<BenchmarkCommand>(commandArgs, config);
     } else if (commandName == "blacklist") {
