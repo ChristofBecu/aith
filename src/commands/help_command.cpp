@@ -27,6 +27,8 @@ void HelpCommand::displayMainHelp() const {
     std::cout << R"(
 🤖 AITH - And It Talks, Human
 
+CLI for managing AI conversations with multiple providers / models.
+
 USAGE:
     aith [OPTIONS] COMMAND [ARGUMENTS]
 
