@@ -41,6 +41,9 @@ COMMANDS:
     blacklist list            List all blacklisted models
     blacklist add [target]    Add a model to the blacklist (e.g., groq llama2)
     blacklist remove [target] Remove a model from the blacklist (e.g., openai)
+    config                    Manage configuration settings
+    config wizard             Interactive configuration setup wizard
+    config show               Display current configuration
     help                      Display this help message
 
 OPTIONS:
@@ -78,6 +81,11 @@ Management Commands:
     aith blacklist add groq llama2      # Blacklist a specific model
     aith blacklist remove openai        # Remove a model from the blacklist
     aith benchmark                      # Test provider performance
+
+Configuration Management:
+    aith config wizard                  # Run interactive setup wizard
+    aith config show                    # Display current configuration
+    aith config add groq sk-xxx         # Add a new provider configuration
 
 )" << std::endl;
 }

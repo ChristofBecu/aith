@@ -5,6 +5,7 @@
 #include "benchmark_command.h"
 #include "blacklist_command.h"
 #include "help_command.h"
+#include "config_command.h"
 #include <stdexcept>
 #include <algorithm>
 #include <iostream>
@@ -21,6 +22,7 @@ static const std::vector<std::string> SUPPORTED_COMMANDS = {
     "benchmark",  // Alias for "test"
     "blacklist",
     "new",
+    "config",
     "help"
     // Note: Direct chat prompts are handled as a special case
 };
@@ -58,6 +60,8 @@ std::unique_ptr<Command> CommandFactory::createCommand(
         return std::make_unique<BenchmarkCommand>(commandArgs, config);
     } else if (commandName == "blacklist") {
         return std::make_unique<BlacklistCommand>(commandArgs, config);
+    } else if (commandName == "config") {
+        return std::make_unique<ConfigCommand>(commandArgs, config);
     } else if (commandName == "new") {
         return std::make_unique<ChatCommand>(commandArgs, config);
     } else if (commandName == "help") {

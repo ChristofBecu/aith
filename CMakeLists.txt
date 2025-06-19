@@ -19,6 +19,7 @@ include_directories(include/benchmark)
 include_directories(include/chat)
 include_directories(include/utils)
 include_directories(include/commands)
+include_directories(include/config)
 
 # Source files organized by domain
 set(CORE_SOURCES
@@ -93,6 +94,11 @@ set(UTILS_SOURCES
     src/utils/conversation_displayer.cpp
 )
 
+set(CONFIG_SOURCES
+    src/config/config_wizard.cpp
+    src/config/config_template_manager.cpp
+)
+
 set(COMMANDS_SOURCES
     src/commands/command_line_parser.cpp
     src/commands/command_factory.cpp
@@ -102,6 +108,7 @@ set(COMMANDS_SOURCES
     src/commands/benchmark_command.cpp
     src/commands/blacklist_command.cpp
     src/commands/help_command.cpp
+    src/commands/config_command.cpp
 )
 
 set(ALL_SOURCES
@@ -115,6 +122,7 @@ set(ALL_SOURCES
     ${MARKDOWN_SOURCES}
     ${UTILS_SOURCES}
     ${COMMANDS_SOURCES}
+    ${CONFIG_SOURCES}
 )
 
 # Add executable

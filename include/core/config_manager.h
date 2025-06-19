@@ -44,12 +44,13 @@ public:
      */
     static std::string getDefaultPrompt();
 
-private:
     /**
      * Gets the main configuration directory path (~/.config/aith)
      * @return The configuration directory path
      */
     static std::string getConfigDir();
+
+private:
     
     /**
      * Reads a configuration value from a specific file.
