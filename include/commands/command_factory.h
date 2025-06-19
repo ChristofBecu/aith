@@ -1,35 +1,43 @@
 #pragma once
 
 #include "command.h"
-#include "application_setup.h"
+#include "core/application_setup.h"
 #include <memory>
 #include <string>
 #include <vector>
+#include <functional>
+#include <unordered_map>
 
 /**
  * @brief Factory class for creating command instances.
  * 
- * This class implements the Factory pattern to create appropriate
- * command objects based on command names. It centralizes command
- * creation logic and ensures all commands are properly initialized
- * with the required configuration data.
+ * This class implements the Factory pattern using a functional approach
+ * with a map of command names to factory functions. This eliminates
+ * code duplication and provides O(1) command creation.
  * 
  * The factory supports all application commands:
  * - list: List available AI models
  * - history: Show conversation history
- * - test/benchmark: Run model performance tests
+ * - benchmark: Run model performance tests
  * - blacklist: Manage blacklisted models
+ * - config: Manage configuration settings
  * - new: Start new conversation
- * - chat: Direct chat interaction (default)
+ * - help: Show help information
+ * - chat: Direct chat interaction (for multi-word prompts)
  */
 class CommandFactory {
 public:
     /**
+     * @brief Type alias for command factory functions.
+     */
+    using CommandCreator = std::function<std::unique_ptr<Command>(
+        const std::vector<std::string>&, 
+        const ApplicationSetup::Config&)>;
+
+    /**
      * @brief Creates a command instance based on the command name.
      * 
-     * This method analyzes the command name and creates the appropriate
-     * command object, initialized with the provided configuration and
-     * arguments.
+     * Uses a map of factory functions for O(1) command creation.
      * 
      * @param commandName The name of the command to create
      * @param commandArgs Arguments specific to the command (excluding command name)
@@ -46,9 +54,6 @@ public:
     /**
      * @brief Checks if a command name is valid and supported.
      * 
-     * This method can be used to validate command names before
-     * attempting to create command instances.
-     * 
      * @param commandName The command name to validate
      * @return true if the command is supported, false otherwise
      */
@@ -57,29 +62,26 @@ public:
     /**
      * @brief Gets a list of all supported command names.
      * 
-     * Useful for generating help text or validating user input.
-     * 
      * @return Vector containing all supported command names
      */
     static std::vector<std::string> getSupportedCommands();
 
 private:
     /**
-     * @brief Validates that a command name is not empty or invalid.
+     * @brief Gets the static map of command creators.
      * 
-     * @param commandName The command name to validate
-     * @throws std::invalid_argument if command name is empty or invalid
+     * @return Reference to the map of command name to factory function
      */
-    static void validateCommandName(const std::string& commandName);
+    static const std::unordered_map<std::string, CommandCreator>& getCommandCreators();
 
     /**
-     * @brief Determines if the command represents a direct chat prompt.
+     * @brief Determines if the input represents a direct chat prompt.
      * 
-     * If the command name doesn't match any known commands, it's treated
-     * as a direct chat prompt (the default behavior).
+     * Only treats multi-word input as chat commands to ensure
+     * single-word unrecognized commands show errors.
      * 
-     * @param commandName The command name to check
+     * @param input The input string to check
      * @return true if this should be treated as a chat command
      */
-    static bool isChatCommand(const std::string& commandName);
+    static bool isChatCommand(const std::string& input);
 };

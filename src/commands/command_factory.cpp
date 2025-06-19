@@ -7,110 +7,131 @@
 #include "help_command.h"
 #include "config_command.h"
 #include <stdexcept>
-#include <algorithm>
-#include <iostream>
+#include <unordered_map>
+#include <functional>
 
 /**
- * List of all supported commands in the application.
- * This centralized list makes it easy to add new commands
- * and maintain consistency across the application.
+ * Gets the static map of command creators.
+ * This is the single source of truth for all supported commands.
  */
-static const std::vector<std::string> SUPPORTED_COMMANDS = {
-    "list",
-    "history",
-    "benchmark",
-    "blacklist",
-    "new",
-    "config",
-    "help"
-    // Note: Direct chat prompts are handled as a special case
-};
+const std::unordered_map<std::string, CommandFactory::CommandCreator> &
+CommandFactory::getCommandCreators()
+{
+    static const std::unordered_map<std::string, CommandCreator> creators = {
+        {"list", [](const std::vector<std::string> &args, const ApplicationSetup::Config &config)
+         {
+             return std::make_unique<ListCommand>(args, config);
+         }},
+        {"history", [](const std::vector<std::string> &args, const ApplicationSetup::Config &config)
+         {
+             return std::make_unique<HistoryCommand>(args, config);
+         }},
+        {"benchmark", [](const std::vector<std::string> &args, const ApplicationSetup::Config &config)
+         {
+             return std::make_unique<BenchmarkCommand>(args, config);
+         }},
+        {"blacklist", [](const std::vector<std::string> &args, const ApplicationSetup::Config &config)
+         {
+             return std::make_unique<BlacklistCommand>(args, config);
+         }},
+        {"config", [](const std::vector<std::string> &args, const ApplicationSetup::Config &config)
+         {
+             return std::make_unique<ConfigCommand>(args, config);
+         }},
+        {"new", [](const std::vector<std::string> &args, const ApplicationSetup::Config &config)
+         {
+             return std::make_unique<ChatCommand>(args, config);
+         }},
+        {"help", [](const std::vector<std::string> &args, const ApplicationSetup::Config &config)
+         {
+             return std::make_unique<HelpCommand>(args, config);
+         }}};
+    return creators;
+}
 
 /**
  * Creates a command instance based on the command name.
- * 
- * This is the main factory method that routes command creation
- * to the appropriate command class constructor.
+ * Uses the factory function map for clean, O(1) command creation.
  */
 std::unique_ptr<Command> CommandFactory::createCommand(
-    const std::string& commandName,
-    const std::vector<std::string>& commandArgs,
-    const ApplicationSetup::Config& config) {
-    
-    validateCommandName(commandName);
-    
-    if (commandName == "list") {
-        return std::make_unique<ListCommand>(commandArgs, config);
-    } else if (commandName == "history") {
-        return std::make_unique<HistoryCommand>(commandArgs, config);
-    } else if (commandName == "benchmark") {
-        return std::make_unique<BenchmarkCommand>(commandArgs, config);
-    } else if (commandName == "blacklist") {
-        return std::make_unique<BlacklistCommand>(commandArgs, config);
-    } else if (commandName == "config") {
-        return std::make_unique<ConfigCommand>(commandArgs, config);
-    } else if (commandName == "new") {
-        return std::make_unique<ChatCommand>(commandArgs, config);
-    } else if (commandName == "help") {
-        return std::make_unique<HelpCommand>(commandArgs, config);
-    } else if (isChatCommand(commandName)) {
-        return std::make_unique<ChatCommand>(commandArgs, config);
-    } else {
-        throw std::invalid_argument("Unknown command: " + commandName);
+    const std::string &commandName,
+    const std::vector<std::string> &commandArgs,
+    const ApplicationSetup::Config &config)
+{
+
+    if (commandName.empty())
+    {
+        throw std::invalid_argument("Command name cannot be empty");
     }
+
+    const auto &creators = getCommandCreators();
+    auto it = creators.find(commandName);
+
+    if (it != creators.end())
+    {
+        return it->second(commandArgs, config);
+    }
+
+    // Handle chat command for multi-word prompts
+    if (isChatCommand(commandName))
+    {
+        // Create args with the full prompt as the first argument
+        std::vector<std::string> chatArgs = {commandName};
+        chatArgs.insert(chatArgs.end(), commandArgs.begin(), commandArgs.end());
+        return std::make_unique<ChatCommand>(chatArgs, config);
+    }
+
+    throw std::invalid_argument("Unknown command: " + commandName);
 }
 
 /**
  * Checks if a command name is valid and supported.
  */
-bool CommandFactory::isValidCommand(const std::string& commandName) {
-    if (commandName.empty()) {
+bool CommandFactory::isValidCommand(const std::string &commandName)
+{
+    if (commandName.empty())
+    {
         return false;
     }
-    
-    // Check if it's in the supported commands list
-    auto it = std::find(SUPPORTED_COMMANDS.begin(), SUPPORTED_COMMANDS.end(), commandName);
-    if (it != SUPPORTED_COMMANDS.end()) {
-        return true;
-    }
-    
-    // If not a known command, treat as potential chat prompt (always valid)
-    return true;
+
+    const auto &creators = getCommandCreators();
+    return creators.find(commandName) != creators.end();
 }
 
 /**
  * Gets a list of all supported command names.
  */
-std::vector<std::string> CommandFactory::getSupportedCommands() {
-    std::vector<std::string> commands = SUPPORTED_COMMANDS;
-    commands.push_back("chat");  // Add chat as a conceptual command
+std::vector<std::string> CommandFactory::getSupportedCommands()
+{
+    const auto &creators = getCommandCreators();
+    std::vector<std::string> commands;
+    commands.reserve(creators.size() + 1);
+
+    // Extract keys from the map
+    for (const auto &pair : creators)
+    {
+        commands.push_back(pair.first);
+    }
+
+    commands.push_back("chat"); // Add chat as a conceptual command
     return commands;
 }
 
 /**
- * Validates that a command name is not empty or invalid.
+ * Determines if the input represents a direct chat prompt.
+ * Only treats multi-word input as chat commands to ensure
+ * single-word unrecognized commands show errors.
  */
-void CommandFactory::validateCommandName(const std::string& commandName) {
-    if (commandName.empty()) {
-        throw std::invalid_argument("Command name cannot be empty");
-    }
-}
+bool CommandFactory::isChatCommand(const std::string &input)
+{
+    const auto &creators = getCommandCreators();
 
-/**
- * Determines if the command represents a direct chat prompt.
- * 
- * Only treat as a chat command if it contains spaces (multi-word), 
- * indicating it was likely quoted and is intended as a prompt.
- * Single-word unrecognized commands should be treated as errors.
- */
-bool CommandFactory::isChatCommand(const std::string& commandName) {
     // If it's a known command, it's definitely not a chat command
-    auto it = std::find(SUPPORTED_COMMANDS.begin(), SUPPORTED_COMMANDS.end(), commandName);
-    if (it != SUPPORTED_COMMANDS.end()) {
+    if (creators.find(input) != creators.end())
+    {
         return false;
     }
-    
+
     // Only treat as chat command if it contains spaces (multi-word)
-    // This implements the requirement that single-word unrecognized commands should error
-    return commandName.find(' ') != std::string::npos;
+    return input.find(' ') != std::string::npos;
 }
