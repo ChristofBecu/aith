@@ -43,7 +43,16 @@ COMMANDS:
     blacklist remove [target] Remove a model from the blacklist (e.g., openai)
     config                    Manage configuration settings
     config wizard             Interactive configuration setup wizard
-    config show               Display current configuration
+    config add <provider> <key> Add provider configuration (non-interactive)
+    config list               List all configuration files
+    config show [provider]    Display configuration details
+    config create <provider>  Create configuration template
+    config edit <provider>    Edit provider configuration
+    config remove <provider>  Remove provider configuration
+    config validate [provider] Validate configuration files
+    config set-default <provider> Set default provider
+    config backup [name]      Create configuration backup
+    config restore [name]     Restore from backup
     help                      Display this help message
 
 OPTIONS:
@@ -84,8 +93,14 @@ Management Commands:
 
 Configuration Management:
     aith config wizard                  # Run interactive setup wizard
-    aith config show                    # Display current configuration
-    aith config add groq sk-xxx         # Add a new provider configuration
+    aith config add groq sk-xxx         # Add provider configuration
+    aith config list                    # List all configurations
+    aith config show                    # Show current configuration
+    aith config show anthropic          # Show specific provider config
+    aith config validate                # Validate all configurations
+    aith config set-default openai      # Change default provider
+    aith config backup my-backup        # Create configuration backup
+    aith config restore my-backup       # Restore from backup
 
 )" << std::endl;
 }

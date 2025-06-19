@@ -78,10 +78,31 @@ private:
      */
     void executeRemoveCommand();
     
-    // Phase 2: Advanced operations (to be implemented later)
+    // Phase 2: CRUD and Advanced operations
+    /**
+     * @brief Add new provider configuration (non-interactive)
+     */
+    void executeAddCommand();
+    
+    /**
+     * @brief Validate configuration files
+     */
     void executeValidateCommand();
-    void executeTestCommand();
-    void executeStatusCommand();
+    
+    /**
+     * @brief Set default provider
+     */
+    void executeSetDefaultCommand();
+    
+    /**
+     * @brief Backup configuration files
+     */
+    void executeBackupCommand();
+    
+    /**
+     * @brief Restore configuration from backup
+     */
+    void executeRestoreCommand();
     
     // Phase 3: Value management (to be implemented later)
     void executeGetCommand();
@@ -100,6 +121,21 @@ private:
      * @brief Validates arguments for specific sub-commands
      */
     void validateSubcommandArgs() const;
+    
+    /**
+     * @brief Validates main configuration file
+     * @param configPath Path to the main config file
+     * @return True if valid, false otherwise
+     */
+    bool validateMainConfig(const std::string& configPath);
+    
+    /**
+     * @brief Validates provider configuration file
+     * @param provider Provider name
+     * @param configPath Path to the provider config file
+     * @return True if valid, false otherwise
+     */
+    bool validateProviderConfig(const std::string& provider, const std::string& configPath);
     
     std::vector<std::string> args_;
     ApplicationSetup::Config config_;
