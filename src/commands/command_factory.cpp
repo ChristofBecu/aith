@@ -75,9 +75,9 @@ std::unique_ptr<Command> CommandFactory::createCommand(
     // Handle chat command for multi-word prompts
     if (isChatCommand(commandName))
     {
-        // Create args with the full prompt as the first argument
+        // For multi-word prompts, create a ChatCommand with just the prompt
+        // Don't include any additional arguments to avoid confusion
         std::vector<std::string> chatArgs = {commandName};
-        chatArgs.insert(chatArgs.end(), commandArgs.begin(), commandArgs.end());
         return std::make_unique<ChatCommand>(chatArgs, config);
     }
 
